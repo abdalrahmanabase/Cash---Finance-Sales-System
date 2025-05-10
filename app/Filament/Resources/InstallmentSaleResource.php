@@ -75,9 +75,15 @@ class InstallmentSaleResource extends Resource
                     ->searchable()
                     ->preload()
                     ->live()
+                    ->afterStateHydrated(function ($state, Set $set) {
+                        if (!$state) return;
+                        $product = Product::find($state);
+                        $set('available_stock', $product->stock ?? 0);
+                    })
                     ->afterStateUpdated(function ($state, Set $set) {
-                        if (!$product = Product::find($state)) return;
-                        $set('unit_price', $product->installment_price ?? $product->cash_price);
+                        if (!$state) return;
+                        $product = Product::find($state);
+                        $set('unit_price', $product->cash_price);
                         $set('available_stock', $product->stock ?? 0);
                     })
                     ->required(),

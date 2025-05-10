@@ -51,19 +51,24 @@ class CashSaleResource extends Resource
             ->minItems(1)
             ->required()
             ->schema([
-                Select::make('product_id')
-                    ->label('Product')
-                    ->relationship('product', 'name')
-                    ->searchable()
-                    ->preload()
-                    ->live()
-                    ->afterStateUpdated(function ($state, Set $set) {
-                        if (!$state) return;
-                        $product = Product::find($state);
-                        $set('unit_price', $product->cash_price);
-                        $set('available_stock', $product->stock ?? 0);
-                    })
-                    ->required(),
+               Select::make('product_id')
+                ->label('Product')
+                ->relationship('product', 'name')
+                ->searchable()
+                ->preload()
+                ->live()
+                ->afterStateHydrated(function ($state, Set $set) {
+                    if (!$state) return;
+                    $product = Product::find($state);
+                    $set('available_stock', $product->stock ?? 0);
+                })
+                ->afterStateUpdated(function ($state, Set $set) {
+                    if (!$state) return;
+                    $product = Product::find($state);
+                    $set('unit_price', $product->cash_price);
+                    $set('available_stock', $product->stock ?? 0);
+                })
+                ->required(),
 
                 TextInput::make('quantity')
                     ->numeric()

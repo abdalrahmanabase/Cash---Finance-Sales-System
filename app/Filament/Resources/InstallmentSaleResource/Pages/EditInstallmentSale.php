@@ -10,6 +10,9 @@ class EditInstallmentSale extends EditRecord
 {
     protected static string $resource = InstallmentSaleResource::class;
 
+    protected array $cachedItems = [];
+
+
     protected function getHeaderActions(): array
     {
         return [
@@ -22,7 +25,29 @@ class EditInstallmentSale extends EditRecord
         return $this->getResource()::getUrl('index');
     }
 
-    protected array $cachedItems = [];
+    protected function beforeSave(): void
+    {
+        // Cache old items before update to restore stock
+        $this->cachedItems = $this->record->items()->with('product')->get()->all();
+    }
+
+    protected function afterSave(): void
+    {
+        // Restore stock for old items
+        foreach ($this->cachedItems as $item) {
+            if ($item->product) {
+                $item->product->increment('stock', $item->quantity);
+            }
+        }
+        // Deduct stock for new items
+        $sale = $this->record->fresh('items.product');
+        foreach ($sale->items as $item) {
+            if ($item->product) {
+                $item->product->decrement('stock', $item->quantity);
+            }
+        }
+    }
+
 
     protected function beforeDelete(): void
     {

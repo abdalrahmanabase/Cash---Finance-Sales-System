@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\CashSaleResource\Pages;
 
 use App\Filament\Resources\CashSaleResource;
-use Filament\Actions\CreateAction;
+use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListCashSales extends ListRecords
@@ -13,7 +13,11 @@ class ListCashSales extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            Actions\CreateAction::make(),
         ];
+    }
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

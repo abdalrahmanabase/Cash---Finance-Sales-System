@@ -4,13 +4,13 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Product;
-use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -23,96 +23,112 @@ class ProductResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form
+        return $form->schema([
+            Section::make('Product Information')->schema([
+                TextInput::make('name')
+                    ->required()
+                    ->maxLength(255)
+                    ->columnSpan(2),
+
+                TextInput::make('code')
+                    ->unique(ignoreRecord: true)
+                    ->nullable()
+                    ->maxLength(255),
+
+                Select::make('category_id')
+                    ->relationship('category', 'name')
+                    ->required()
+                    ->preload()
+                    ->searchable(),
+
+                Select::make('provider_id')
+                    ->relationship('provider', 'name')
+                    ->required()
+                    ->preload()
+                    ->searchable(),
+
+                TextInput::make('stock')
+                    ->required()
+                    ->numeric()
+                    ->minValue(0)
+                    ->default(0)
+                    ->label('Current Stock'),
+            ])->columns(3),
+
+            Section::make('Pricing')
             ->schema([
-                Section::make('Product Information')
-                    ->schema([
-                        TextInput::make('name')
-                            ->required()
-                            ->maxLength(255)
-                            ->columnSpan(2),
+                TextInput::make('purchase_price')
+                    ->required()
+                    ->numeric()
+                    ->minValue(0)
+                    ->prefix('EGP')
+                    ->reactive()
+                    ->debounce(500)
+                    ->afterStateUpdated(function (callable $set, callable $get) {
+                        $purchase = floatval($get('purchase_price'));
+                        $cash = floatval($get('cash_price'));
+                        $profit = $cash - $purchase;
 
-                        TextInput::make('code')
-                            ->unique(ignoreRecord: true)
-                            ->nullable()
-                            ->maxLength(255),
+                        $set('profit', $profit);
+                        $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0);
+                    }),
 
-                        Select::make('category_id')
-                            ->relationship('category', 'name')
-                            ->required()
-                            ->preload()
-                            ->searchable(),
+                TextInput::make('cash_price')
+                    ->required()
+                    ->numeric()
+                    ->minValue(0)
+                    ->prefix('EGP')
+                    ->reactive()
+                    ->debounce(500)
+                    ->afterStateUpdated(function (callable $set, callable $get) {
+                        $purchase = floatval($get('purchase_price'));
+                        $cash = floatval($get('cash_price'));
+                        $profit = $cash - $purchase;
 
-                        Select::make('provider_id')
-                            ->relationship('provider', 'name')
-                            ->required()
-                            ->preload()
-                            ->searchable(),
-                    ])
-                    ->columns(3),
+                        $set('profit', $profit);
+                        $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0);
+                    }),
 
-                    Section::make('Pricing')
-                    ->schema([
-                        TextInput::make('purchase_price')
-                            ->required()
-                            ->numeric()
-                            ->minValue(0)
-                            ->prefix('EGP')
-                            ->reactive()
-                            ->debounce(500)
-                            ->afterStateUpdated(function (callable $set, callable $get) {
-                                $purchase = floatval($get('purchase_price'));
-                                $cash = floatval($get('cash_price'));
-                                $profit = $cash - $purchase;
-
-                                $set('profit', $profit);
-                                $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0);
-                            }),
-
-                        TextInput::make('cash_price')
-                            ->required()
-                            ->numeric()
-                            ->minValue(0)
-                            ->prefix('EGP')
-                            ->reactive()
-                            ->debounce(500)
-                            ->afterStateUpdated(function (callable $set, callable $get) {
-                                $purchase = floatval($get('purchase_price'));
-                                $cash = floatval($get('cash_price'));
-                                $profit = $cash - $purchase;
-
-                                $set('profit', $profit);
-                                $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0);
-                            }),
-
-                
-                        TextInput::make('profit')
-                            ->disabled()
-                            ->numeric()
-                            ->prefix('EGP')
-                            ->label('Profit (Auto)')
-                            ->default(0),
-                
-                        TextInput::make('profit_percentage')
-                            ->disabled()
-                            ->numeric()
-                            ->suffix('%')
-                            ->label('Profit %')
-                            ->default(0),
-                    ])
-                    ->columns(3),
-                
-
-            ]);
+        
+                TextInput::make('profit')
+                    ->disabled()
+                    ->numeric()
+                    ->prefix('EGP')
+                    ->label('Profit (Auto)')
+                    ->default(0),
+        
+                TextInput::make('profit_percentage')
+                    ->disabled()
+                    ->numeric()
+                    ->suffix('%')
+                    ->label('Profit %')
+                    ->default(0),
+            ])
+            ->columns(3),
+        ]);
     }
+
+    // private static function updateProfitCalculations(callable $set, callable $get): void
+    // {
+    //     $purchase = (float) $get('purchase_price');
+    //     $cash = (float) $get('cash_price');
+
+    //     if (!is_numeric($purchase) || !is_numeric($cash)) {
+    //         return;
+    //     }
+
+    //     $profit = $cash - $purchase;
+    //     $percentage = $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0;
+
+    //     $set('profit', $profit);
+    //     $set('profit_percentage', $percentage);
+    // }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('name')
-                    ->sortable()
-                    ->searchable(),
+                TextColumn::make('name')->sortable()->searchable(),
 
                 TextColumn::make('category.name')
                     ->sortable()
@@ -132,16 +148,17 @@ class ProductResource extends Resource
                     ->money('EGP')
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                TextColumn::make('inventory.stock')
+                TextColumn::make('stock')
                     ->sortable()
-                    ->label('Stock'),
+                    ->label('Stock')
+                    ->numeric()
+                    ->color(fn ($record) => $record->stock > 0 ? 'success' : 'danger')
+                    ->weight('bold'),
 
                 IconColumn::make('is_active')
                     ->label('Active')
                     ->boolean()
-                    ->state(function (Product $record) {
-                        return ($record->inventory->stock ?? 0) > 0;
-                    })
+                    ->state(fn ($record) => $record->stock > 0)
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
@@ -158,14 +175,35 @@ class ProductResource extends Resource
                     ->searchable()
                     ->preload(),
 
-                Tables\Filters\TernaryFilter::make('is_active')
-                    ->label('Active Status'),
+                Tables\Filters\TernaryFilter::make('in_stock')
+                    ->label('Stock Status')
+                    ->placeholder('All')
+                    ->trueLabel('In Stock')
+                    ->falseLabel('Out of Stock')
+                    ->queries(
+                        true: fn ($query) => $query->where('stock', '>', 0),
+                        false: fn ($query) => $query->where('stock', '<=', 0),
+                    ),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+
+                Action::make('addStock')
+                    ->label('Add Stock')
+                    ->icon('heroicon-o-plus')
+                    ->color('success')
+                    ->form([
+                        TextInput::make('quantity')
+                            ->required()
+                            ->numeric()
+                            ->minValue(1)
+                            ->label('Quantity to Add')
+                    ])
+                    ->action(fn (Product $record, array $data) => $record->increment('stock', $data['quantity']))
+                    ->visible(fn ($record) => $record->exists),
+
                 Tables\Actions\DeleteAction::make(),
-            ])
-            ;
+            ]);
     }
 
     public static function getPages(): array

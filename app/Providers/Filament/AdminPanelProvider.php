@@ -17,7 +17,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use App\Filament\Widgets\SaleOptionsWidget;
+use App\Filament\Widgets\SaleOptionsButton;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -40,7 +40,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 // Widgets\FilamentInfoWidget::class,
-                SaleOptionsWidget::class, 
+                SaleOptionsButton::class, 
             ])
             ->middleware([
                 EncryptCookies::class,

@@ -19,10 +19,12 @@ return new class extends Migration
                 $table->decimal('purchase_price', 12, 2); 
                 $table->decimal('cash_price', 12, 2); 
                 $table->decimal('profit', 12, 2)->nullable();
+                $table->decimal('stock', 12, 2)->default(0);
                 $table->boolean('is_active')->default(true);
                 $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
                 $table->foreignId('provider_id')->constrained('providers')->onDelete('cascade');
                 $table->timestamps();
+                $table->softDeletes();
             });
     }
 

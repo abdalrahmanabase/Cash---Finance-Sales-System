@@ -1,8 +1,9 @@
 <?php
+
 namespace App\Filament\Resources\InstallmentSaleResource\Pages;
 
 use App\Filament\Resources\InstallmentSaleResource;
-use Filament\Actions\CreateAction;
+use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListInstallmentSales extends ListRecords
@@ -12,7 +13,12 @@ class ListInstallmentSales extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            Actions\CreateAction::make(),
         ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

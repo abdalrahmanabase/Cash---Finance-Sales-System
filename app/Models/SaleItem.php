@@ -1,9 +1,10 @@
 <?php
 
 namespace App\Models;
-use App\Models\Inventory;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class SaleItem extends Model
 {
@@ -23,19 +24,25 @@ class SaleItem extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class)->with('inventory');
+        return $this->belongsTo(Product::class);
     }
+    // protected static function booted()
+    // {
+    //     static::deleted(function (SaleItem $saleItem) {
+    //         $inventory = $saleItem->product->inventory;
+    
+    //         if ($inventory) {
+    //             $inventory->updateStock(
+    //                 quantity: $saleItem->quantity,
+    //                 operation: 'add',
+    //                 notes: "Restock from deleted sale item #{$saleItem->id}"
+    //             );
+    //         }
+    //     });
+    // }
 
-    protected static function booted()
-    {
-        static::deleted(function (SaleItem $saleItem) {
-            if ($saleItem->product && $saleItem->product->inventory) {
-                $saleItem->product->inventory->updateStock(
-                    quantity: $saleItem->quantity,
-                    operation: 'add',
-                    notes: "Restock from deleted sale item #{$saleItem->id}"
-                );
-            }
-        });
-    }
+    // private function restockProcessed(): bool
+    // {
+    //     return Cache::has("saleitem_restocked_{$this->id}");
+    // }
 }

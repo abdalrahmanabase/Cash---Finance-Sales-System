@@ -1,23 +1,21 @@
-<x-filament::widget>
-    <x-slot name="header">
-        <h2 class="text-lg font-bold">Start a New Sale</h2>
-    </x-slot>
-
-    <div class="flex space-x-4">
+<x-filament::widget class="!px-4 !py-6">
+    <div class="flex flex-col gap-4">
         <x-filament::button
             color="success"
             tag="a"
-            href="{{ route('filament.admin.resources.sales.cash.create') }}"
+            href="{{ \App\Filament\Resources\CashSaleResource::getUrl('create') }}"
             icon="heroicon-o-currency-dollar"
+            class="w-full justify-center py-6 text-size-lg"
         >
             New Cash Sale
         </x-filament::button>
-
+    
         <x-filament::button
             color="primary"
             tag="a"
-            href="{{ route('filament.admin.resources.sales.installment.create') }}"
+            href="{{ \App\Filament\Resources\InstallmentSaleResource::getUrl('create') }}"
             icon="heroicon-o-credit-card"
+            class="w-full justify-center py-6 text-size-lg"
         >
             New Installment Sale
         </x-filament::button>

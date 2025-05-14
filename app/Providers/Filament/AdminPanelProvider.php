@@ -18,6 +18,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Filament\Widgets\SaleOptionsButton;
+use App\Filament\Widgets\ClientInstallmentPaymentWidget;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -35,12 +36,14 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
+                \App\Filament\Pages\ClientInstallmentPayments::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
                 // Widgets\FilamentInfoWidget::class,
                 SaleOptionsButton::class, 
+                ClientInstallmentPaymentWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

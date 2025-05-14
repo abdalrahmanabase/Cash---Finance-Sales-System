@@ -22,16 +22,20 @@ return new class extends Migration
             $table->decimal('interest_rate', 5, 2)->nullable();
             $table->decimal('interest_amount', 12, 2)->nullable();
             $table->decimal('final_price', 12, 2);
+            $table->decimal('down_payment', 12, 2)->default(0); 
             $table->decimal('monthly_installment', 12, 2)->nullable();
             $table->decimal('paid_amount', 12, 2)->default(0);
             $table->decimal('remaining_amount', 12, 2)->nullable();
             $table->integer('months_count')->nullable();
+
+            // Installment tracking
+            $table->json('payment_dates')->nullable();   
+            $table->json('payment_amounts')->nullable(); 
             
             $table->enum('status', ['ongoing', 'completed'])->default('ongoing');
             $table->text('notes')->nullable();
             $table->timestamps();
         });
-        
     }
 
     /**

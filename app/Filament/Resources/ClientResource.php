@@ -39,24 +39,32 @@ class ClientResource extends Resource
 
                         TextInput::make('phone')
                             ->required()
-                            ->maxLength(255)
+                            ->maxLength(11)
                             ->label('Client Phone'),
 
                         TextInput::make('secondary_phone')
                             ->nullable()
-                            ->maxLength(255)
+                            ->maxLength(11)
                             ->label('Secondary Phone'),
 
                         FileUpload::make('proof_of_address')
                             ->directory('client-documents')
                             ->nullable()
                             ->image()
+                            ->preserveFilenames()
+                                ->downloadable()
+                                ->openable()
+                                ->previewable()
                             ->label('Proof of Address'),
 
                         FileUpload::make('id_photo')
                             ->directory('client-documents')
                             ->nullable()
                             ->image()
+                            ->preserveFilenames()
+                                ->downloadable()
+                                ->openable()
+                                ->previewable()
                             ->label('ID Photo'),
 
                         TextInput::make('receipt_number')
@@ -88,24 +96,32 @@ class ClientResource extends Resource
 
                                 TextInput::make('phone')
                                     ->required()
-                                    ->maxLength(255)
+                                    ->maxLength(11)
                                     ->label('Guarantor Phone'),
 
                                 TextInput::make('secondary_phone')
                                     ->nullable()
-                                    ->maxLength(255)
+                                    ->maxLength(11)
                                     ->label('Secondary Phone'),
 
                                 FileUpload::make('proof_of_address')
                                     ->directory('guarantor-documents')
                                     ->nullable()
                                     ->image()
+                                    ->preserveFilenames()
+                                    ->downloadable()
+                                    ->openable()
+                                    ->previewable()
                                     ->label('Guarantor Proof of Address'),
 
                                 FileUpload::make('id_photo')
                                     ->directory('guarantor-documents')
                                     ->nullable()
                                     ->image()
+                                    ->preserveFilenames()
+                                    ->downloadable()
+                                    ->openable()
+                                    ->previewable()
                                     ->label('Guarantor ID Photo'),
 
                                 TextInput::make('relation')

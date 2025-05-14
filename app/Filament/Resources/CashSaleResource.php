@@ -72,7 +72,7 @@ class CashSaleResource extends Resource
 
                 TextInput::make('quantity')
                     ->numeric()
-                    ->default(1)
+                    ->default(0)
                     ->minValue(1)
                     ->live(onBlur: true)
                     ->afterStateUpdated(function (Set $set, Get $get) {

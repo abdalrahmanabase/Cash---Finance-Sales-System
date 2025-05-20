@@ -6,29 +6,28 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class Sale extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'sale_type',
-        'status',  
         'client_id',
+        'sale_type',
         'total_price',
         'discount',
-        'down_payment',
-        'final_price',
         'interest_rate',
-        'interest_amount', 
-        'months_count',
+        'interest_amount',
+        'final_price',
+        'down_payment',
         'monthly_installment',
-        'paid_amount',
         'remaining_amount',
+        'months_count',
         'payment_dates',
         'payment_amounts',
+        'status',
         'notes'
     ];
 
@@ -42,7 +41,6 @@ class Sale extends Model
         'interest_rate' => 'float',
         'interest_amount' => 'float',
         'monthly_installment' => 'float',
-        'paid_amount' => 'float',
         'remaining_amount' => 'float',
         'months_count' => 'integer',
     ];
@@ -62,36 +60,45 @@ class Sale extends Model
         $dates = $this->payment_dates ?? [];
         $amounts = $this->payment_amounts ?? [];
         $payments = [];
+        
         foreach ($dates as $i => $date) {
             $payments[] = [
                 'date' => $date,
                 'amount' => $amounts[$i] ?? 0,
             ];
         }
+        
+        // Sort payments by date
+        usort($payments, function ($a, $b) {
+            return strtotime($a['date']) - strtotime($b['date']);
+        });
+        
         return $payments;
     }
 
     public function getPaidAmountAttribute()
     {
-        // Always sum payment_amounts for paid_amount
         return array_sum($this->payment_amounts ?? []);
     }
 
     public function getRemainingMonthsAttribute()
     {
-        $paid = is_array($this->payment_amounts) ? count($this->payment_amounts) : 0;
-        return max(0, ($this->months_count ?? 0) - $paid);
+        $progress = $this->getPaymentScheduleProgress();
+        return max(0, ($this->months_count ?? 0) - $progress['fully_paid_months']);
     }
 
     public function getNextPaymentDateAttribute()
     {
-        $dates = $this->payment_dates ?? [];
-        if (is_array($dates) && count($dates) > 0) {
-            $last = end($dates);
-            return \Carbon\Carbon::parse($last)->addMonth()->format('d-m-Y');
+        if ($this->status === 'completed') {
+            return null;
         }
-        // If no payments, use created_at + 1 month
-        return $this->created_at ? $this->created_at->copy()->addMonth()->format('d-m-Y') : null;
+
+        $progress = $this->getPaymentScheduleProgress();
+        $baseDate = $this->created_at ? Carbon::parse($this->created_at) : now();
+        
+        return $baseDate->copy()
+            ->addMonths($progress['fully_paid_months'] + 1)
+            ->format('Y-m-d');
     }
 
     public function deductStock(): void
@@ -108,77 +115,117 @@ class Sale extends Model
         }
     }
 
-     protected static function booted()
-    {
-        static::creating(function ($sale) {
-            $downPayment = floatval($sale->down_payment ?? 0);
-
-            // Initialize payments array
-            $sale->payment_dates = [];
-            $sale->payment_amounts = [];
-
-            // Add down payment as separate entry if present
-            if ($downPayment > 0) {
-                $sale->payment_dates[] = now()->format('Y-m-d');
-                $sale->payment_amounts[] = $downPayment;
-            }
-
-            // Calculate remaining amounts
-            $finalPrice = floatval($sale->final_price ?? 0);
-            $interestAmount = floatval($sale->interest_amount ?? 0);
-            $sale->paid_amount = array_sum($sale->payment_amounts);
-            $sale->remaining_amount = ($finalPrice + $interestAmount) - $sale->paid_amount;
-        });
-    }
-
-    /**
-     * Record a new payment for this sale
-     */
     public function recordPayment(float $amount, string $date): bool
     {
         try {
-            // Get current payment arrays
+            if ($amount <= 0) {
+                throw new \Exception("Payment amount must be positive");
+            }
+
+            if ($this->status === 'completed') {
+                throw new \Exception("Cannot record payment - sale is already completed");
+            }
+
+            $totalAmount = $this->final_price + ($this->interest_amount ?? 0);
+            $currentPaid = $this->getPaidAmountAttribute();
+            
+            if (($currentPaid + $amount) > $totalAmount) {
+                throw new \Exception("Payment amount exceeds remaining balance");
+            }
+
             $dates = $this->payment_dates ?? [];
             $amounts = $this->payment_amounts ?? [];
 
-            // Add new payment
-            $dates[] = $date;
+            $paymentDate = Carbon::parse($date)->format('Y-m-d');
+            $dates[] = $paymentDate;
             $amounts[] = $amount;
 
-            // Calculate new totals
-            $newPaidAmount = array_sum($amounts);
-            $newRemainingAmount = ($this->final_price + ($this->interest_amount ?? 0)) - $newPaidAmount;
+            $newPaidAmount = $currentPaid + $amount;
+            $newRemainingAmount = max(0, $totalAmount - $newPaidAmount);
+            $isCompleted = $newRemainingAmount <= 0.01;
 
-            // Update the sale
             $this->update([
                 'payment_dates' => $dates,
                 'payment_amounts' => $amounts,
-                'paid_amount' => $newPaidAmount,
                 'remaining_amount' => $newRemainingAmount,
-                'status' => $newRemainingAmount <= 0 ? 'completed' : 'ongoing',
+                'status' => $isCompleted ? 'completed' : 'ongoing',
             ]);
 
             return true;
         } catch (\Exception $e) {
-            \Log::error('Failed to record payment:', [
+            Log::error('Payment recording failed', [
                 'sale_id' => $this->id,
+                'error' => $e->getMessage(),
                 'amount' => $amount,
-                'date' => $date,
-                'error' => $e->getMessage()
+                'date' => $date
             ]);
             return false;
         }
     }
 
-    /**
-     * Get payment status information
-     */
+   public function getPaymentScheduleProgress(): array
+{
+    $monthlyInstallment = $this->monthly_installment ?? 0;
+    $downPayment = $this->down_payment ?? 0;
+    $monthsCount = $this->months_count ?? 0;
+    $allPayments = $this->getAllPaymentsAttribute();
+    
+    // Calculate total paid including all payments
+    $totalPaid = array_sum(array_column($allPayments, 'amount'));
+    
+    // Calculate amount paid toward installments (excluding down payment)
+    $paidTowardInstallments = max(0, $totalPaid - $downPayment);
+    
+    // Sort payments chronologically
+    usort($allPayments, function ($a, $b) {
+        return strtotime($a['date']) - strtotime($b['date']);
+    });
+    
+    $fullyPaidMonths = 0;
+    $remainingPayment = 0;
+    
+    // Process payments after the first two
+    $paymentsToCount = array_slice($allPayments, 0);
+    
+    foreach ($paymentsToCount as $payment) {
+        $remainingPayment += $payment['amount'];
+        
+        // Count how many full months this payment covers
+        while ($remainingPayment >= $monthlyInstallment && $fullyPaidMonths < $monthsCount) {
+            $remainingPayment -= $monthlyInstallment;
+            $fullyPaidMonths++;
+        }
+    }
+    
+    $lastPaymentDate = !empty($allPayments) 
+        ? end($allPayments)['date'] 
+        : ($this->created_at ? $this->created_at->format('Y-m-d') : null);
+    
+    return [
+        'fully_paid_months' => $fullyPaidMonths,
+        'remaining_balance' => $remainingPayment,
+        'last_payment_date' => $lastPaymentDate,
+        'next_payment_due' => ($fullyPaidMonths < $monthsCount) 
+            ? max(0, $monthlyInstallment - $remainingPayment)
+            : 0,
+        'total_paid' => $totalPaid,
+        'paid_toward_installments' => $paidTowardInstallments,
+        'total_months' => $monthsCount,
+    ];
+}
+    public function getCurrentMonthDueAttribute()
+    {
+        $progress = $this->getPaymentScheduleProgress();
+        return $progress['next_payment_due'];
+    }
+
     public function getPaymentStatus(): array
     {
         $totalAmount = $this->final_price + ($this->interest_amount ?? 0);
-        $paidAmount = $this->paid_amount ?? 0;
-        $remainingAmount = $this->remaining_amount ?? ($totalAmount - $paidAmount);
+        $paidAmount = $this->getPaidAmountAttribute();
+        $remainingAmount = $this->remaining_amount ?? max(0, $totalAmount - $paidAmount);
         $progress = $totalAmount > 0 ? ($paidAmount / $totalAmount) * 100 : 0;
+        $paymentProgress = $this->getPaymentScheduleProgress();
 
         return [
             'total_amount' => $totalAmount,
@@ -186,52 +233,37 @@ class Sale extends Model
             'remaining_amount' => $remainingAmount,
             'progress_percentage' => round($progress, 2),
             'is_completed' => $this->status === 'completed',
+            'fully_paid_months' => $paymentProgress['fully_paid_months'],
             'remaining_months' => $this->remaining_months,
             'next_payment_date' => $this->next_payment_date,
+            'next_payment_due' => $paymentProgress['next_payment_due'],
+            'last_payment_date' => $paymentProgress['last_payment_date'],
         ];
     }
 
-    /**
-     * Scope for active installment sales
-     */
     public function scopeActiveInstallments($query)
     {
         return $query->where('sale_type', 'installment')
                     ->where('status', 'ongoing');
     }
 
-    /**
-     * Check if payment is overdue
-     */
     public function isPaymentOverdue(): bool
     {
         if ($this->status === 'completed') {
             return false;
         }
 
-        $lastPaymentDate = end($this->payment_dates) 
-            ? \Carbon\Carbon::parse(end($this->payment_dates))
-            : $this->created_at;
-
-        return $lastPaymentDate->addMonth()->isPast();
-    }
-
-    /**
-     * Get the latest payment
-     */
-    public function getLatestPayment(): ?array
-    {
-        if (empty($this->payment_dates) || empty($this->payment_amounts)) {
-            return null;
+        $nextPaymentDate = $this->next_payment_date;
+        if (!$nextPaymentDate) {
+            return false;
         }
 
-        $dates = $this->payment_dates;
-        $amounts = $this->payment_amounts;
-        $lastIndex = count($dates) - 1;
+        return Carbon::parse($nextPaymentDate)->isPast();
+    }
 
-        return [
-            'date' => $dates[$lastIndex],
-            'amount' => $amounts[$lastIndex],
-        ];
+    public function getLatestPayment(): ?array
+    {
+        $allPayments = $this->getAllPaymentsAttribute();
+        return !empty($allPayments) ? end($allPayments) : null;
     }
 }

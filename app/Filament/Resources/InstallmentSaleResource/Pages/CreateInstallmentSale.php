@@ -5,12 +5,11 @@ namespace App\Filament\Resources\InstallmentSaleResource\Pages;
 use App\Filament\Resources\InstallmentSaleResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
-use App\Models\Sale;
-use Illuminate\Database\Eloquent\Model;
 
 class CreateInstallmentSale extends CreateRecord
 {
     protected static string $resource = InstallmentSaleResource::class;
+
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
@@ -18,19 +17,34 @@ class CreateInstallmentSale extends CreateRecord
 
     protected function afterCreate(): void
     {
-        // Deduct stock after creating the sale
         $this->record->deductStock();
     }
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Ensure numeric values
-        $data['down_payment'] = floatval($data['down_payment'] ?? 0);
-        $data['final_price'] = floatval($data['final_price'] ?? 0);
-        $data['interest_amount'] = floatval($data['interest_amount'] ?? 0);
+        // Get the RAW form data including unvalidated inputs
+        $rawData = $this->form->getRawState();
         
-        \Log::info('Form data before create:', $data);
+        // Force include the down_payment from raw form data
+        $data['down_payment'] = (float)($rawData['down_payment'] ?? 0);
+        
+        // Recalculate all dependent values
+        $finalPrice = (float)($data['final_price'] ?? 0);
+        $interestAmount = (float)($data['interest_amount'] ?? 0);
+        $data['remaining_amount'] = max(0, ($finalPrice - $data['down_payment']) + $interestAmount);
+        
+        // Initialize empty payment history
+        $data['payment_dates'] = [];
+        $data['payment_amounts'] = [];
         
         return $data;
+    }
+
+    protected function getFormActions(): array
+    {
+        return [
+            $this->getCreateFormAction(),
+            $this->getCancelFormAction()
+        ];
     }
 }

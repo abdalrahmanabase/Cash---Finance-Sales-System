@@ -25,6 +25,7 @@ use Filament\Forms\Components\Fieldset;
 use Illuminate\Support\Carbon;
 use App\Filament\Resources\ClientResource;
 use App\Filament\Resources\ProductResource;
+use Illuminate\Database\Eloquent\Builder;
 
 class InstallmentSaleResource extends Resource
 {
@@ -85,7 +86,7 @@ class InstallmentSaleResource extends Resource
                                     ->required(),
                                 TextInput::make('quantity')
                                     ->numeric()
-                                    ->default(1)
+                                    ->default(0)
                                     ->minValue(1)
                                     ->live(onBlur: true)
                                     ->afterStateUpdated(function (Set $set, Get $get) {
@@ -123,10 +124,22 @@ class InstallmentSaleResource extends Resource
                                     ->numeric()
                                     ->prefix('EGP')
                                     ->disabled()
-                                    ->dehydrated(),
+                                    ->dehydrated()
+                                    ->afterStateHydrated(function (Set $set, Get $get) {
+                                        $quantity = $get('quantity') ?? 0;
+                                        $unitPrice = $get('unit_price') ?? 0;
+                                        $set('total', $quantity * $unitPrice);
+                                    }),
                             ])
                             ->live()
                             ->afterStateUpdated(fn (Get $get, Set $set) => InstallmentSaleResource::updateTotals($get, $set))
+                            ->afterStateHydrated(function (Get $get, Set $set, $state) {
+                                foreach ($state as $index => $item) {
+                                    $quantity = $item['quantity'] ?? 0;
+                                    $unitPrice = $item['unit_price'] ?? 0;
+                                    $set("items.{$index}.total", $quantity * $unitPrice);
+                                }
+                            })  
                             ->columnSpanFull(),
                         Hidden::make('total_price')->dehydrated(),
                         Select::make('discount_type')
@@ -137,13 +150,39 @@ class InstallmentSaleResource extends Resource
                             ])
                             ->default('fixed')
                             ->dehydrated(false)
-                            ->live(),
+                            ->live()
+                            ->afterStateHydrated(function (Set $set, $state, $record) {
+                                if (!$record) return;
+                                $subtotal = $record->total_price ?? 0;
+                                $discount = $record->discount ?? 0;
+                                if ($subtotal > 0 && $discount > 0) {
+                                    $percent = round(($discount / $subtotal) * 100, 2);
+                                    if (abs($discount - ($subtotal * ($percent / 100))) < 0.01) {
+                                        $set('discount_type', 'percent');
+                                        return;
+                                    }
+                                }
+                                $set('discount_type', 'fixed');
+                            }),
                         TextInput::make('discount_value')
                             ->label('Discount')
                             ->numeric()
                             ->default(0)
                             ->minValue(0)
                             ->live(onBlur: true)
+                            ->afterStateHydrated(function (Set $set, $state, $record) {
+                                if (!$record) return;
+                                $subtotal = $record->total_price ?? 0;
+                                $discount = $record->discount ?? 0;
+                                if ($subtotal > 0 && $discount > 0) {
+                                    $percent = round(($discount / $subtotal) * 100, 2);
+                                    if (abs($discount - ($subtotal * ($percent / 100))) < 0.01) {
+                                        $set('discount_value', $percent);
+                                        return;
+                                    }
+                                }
+                                $set('discount_value', $discount);
+                            })
                             ->afterStateUpdated(fn (Get $get, Set $set) => InstallmentSaleResource::updateTotals($get, $set)),
                         Hidden::make('discount')->dehydrated(true),
                         TextInput::make('final_price')
@@ -165,32 +204,31 @@ class InstallmentSaleResource extends Resource
 
                 Section::make('Installment Plan')
                     ->schema([
-                         TextInput::make('down_payment')
-                        ->numeric()
-                        ->required()
-                        ->default(0)
-                        ->live(onBlur: true)
-                        ->dehydrated(true)
-                        ->afterStateHydrated(function (Set $set, $state) {
-                            // Hydrate initial down payment value
-                            $set('down_payment', floatval($state ?? 0));
-                        })
-                        ->afterStateUpdated(function (Get $get, Set $set) {
-                            $downPayment = floatval($get('down_payment'));
-                            $finalPrice = floatval($get('final_price') ?? 0);
-
-                            if ($downPayment > $finalPrice) {
-                                Notification::make()
-                                    ->title('Invalid down payment')
-                                    ->body('Down payment cannot exceed the final price')
-                                    ->danger()
-                                    ->send();
-                                $downPayment = $finalPrice;
-                                $set('down_payment', $finalPrice);
-                            }
-                            
-                            static::updateInstallmentCalculations($get, $set);
-                        }),
+                        TextInput::make('down_payment')
+                            ->numeric()
+                            ->required()
+                            ->default(0)
+                            ->live(onBlur: true)
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function (Set $set, $state) {
+                                $set('down_payment', floatval($state ?? 0));
+                            })
+                            ->afterStateUpdated(function (Get $get, Set $set, $state) {
+                                $downPayment = floatval($state);
+                                $finalPrice = floatval($get('final_price') ?? 0);
+                                
+                                if ($downPayment > $finalPrice) {
+                                    Notification::make()
+                                        ->title('Invalid down payment')
+                                        ->body('Down payment cannot exceed the final price')
+                                        ->danger()
+                                        ->send();
+                                    $downPayment = $finalPrice;
+                                }
+                                
+                                $set('down_payment', $downPayment);
+                                static::updateInstallmentCalculations($get, $set);
+                            }),
                         TextInput::make('interest_rate')
                             ->label('Interest Rate')
                             ->numeric()
@@ -229,41 +267,38 @@ class InstallmentSaleResource extends Resource
                     ->columns(2),
 
                 Section::make('Payment Summary')
-                    ->schema([
-                        Grid::make(4)
                             ->schema([
-                                Placeholder::make('paid_amount')
-                                    ->label('Paid Amount')
-                                    ->content(function ($record) {
-                                        $paid = $record?->paid_amount ?? 0;
-                                        return 'EGP ' . number_format($paid, 2);
-                                    })
-                                    ->extraAttributes(['class' => 'text-center p-4 bg-green-50 rounded-lg border border-green-200']),
-                                Placeholder::make('remaining_amount')
-                                    ->label('Remaining Amount')
-                                    ->content(function ($record) {
-                                        $remaining = $record?->remaining_amount ?? ($record?->final_price ?? 0);
-                                        return 'EGP ' . number_format($remaining, 2);
-                                    })
-                                    ->extraAttributes(['class' => 'text-center p-4 bg-blue-50 rounded-lg border border-blue-200']),
-                                Placeholder::make('down_payment')
-                                    ->label('Down Payment')
-                                    ->content(function ($record) {
-                                        $down = $record?->down_payment ?? 0;
-                                        return 'EGP ' . number_format($down, 2);
-                                    })
-                                    ->extraAttributes(['class' => 'text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200']),
-                                Placeholder::make('remaining_months')
-                                    ->label('Remaining Months')
-                                    ->content(function ($record) {
-                                        if (!$record) return '0';
-                                        return $record->remaining_months;
-                                    })
-                                    ->extraAttributes(['class' => 'text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200']),
-                            ]),
+                                Grid::make(4)
+                                    ->schema([
+                        Placeholder::make('paid_amount')
+                            ->label('Paid Amount')
+                            ->content(function ($record) {
+                                $paid = $record?->paid_amount ?? 0;
+                                return 'EGP ' . number_format($paid, 2);
+                            }),
+                        Placeholder::make('remaining_amount')
+                            ->label('Remaining Amount')
+                            ->content(function ($record) {
+                                $remaining = $record?->remaining_amount ?? ($record?->final_price ?? 0);
+                                return 'EGP ' . number_format($remaining, 2);
+                            }),
+                        Placeholder::make('down_payment')
+                            ->label('Down Payment')
+                            ->content(function ($record) {
+                                $down = $record?->down_payment ?? 0;
+                                return 'EGP ' . number_format($down, 2);
+                            }),
+                        Placeholder::make('months_progress')
+                            ->label('Months Progress')
+                            ->content(function ($record) {
+                                if (!$record) return '0/0';
+                                $progress = $record->getPaymentScheduleProgress();
+                                return $progress['fully_paid_months'] . '/' . $record->months_count;
+                            }),
+                    ]),
                         Fieldset::make('Payment History')
                             ->schema([
-                                Placeholder::make('payment_history')
+                                Placeholder::make('')
                                     ->content(function ($record) {
                                         if (!$record) return 'No payments recorded yet.';
                                         $payments = $record->all_payments;
@@ -276,7 +311,7 @@ class InstallmentSaleResource extends Resource
                                             $html .= '</div>';
                                         }
                                         $html .= '</div>';
-                                        return $html;
+                                        return new \Illuminate\Support\HtmlString($html);
                                     })
                                     ->extraAttributes(['class' => 'mt-4']),
                             ])
@@ -323,10 +358,10 @@ class InstallmentSaleResource extends Resource
                     ->label('Remaining')
                     ->money('EGP'),
                 TextColumn::make('months_count')
-                    ->label('Months')
+                    ->label('Months Paid')
                     ->formatStateUsing(function ($state, $record) {
-                        $paidMonths = $record->payment_amounts ? count($record->payment_amounts) : 0;
-                        return "{$state} ({$paidMonths} paid)";
+                        $progress = $record->getPaymentScheduleProgress();
+                        return $progress['fully_paid_months'] . '/' . $state;
                     }),
                 TextColumn::make('monthly_installment')
                     ->label('Monthly')
@@ -405,7 +440,7 @@ class InstallmentSaleResource extends Resource
 
         $finalPrice = $subtotal - $discount;
         $set('total_price', $subtotal);
-        $set('discount', $discount); // Save only the value!
+        $set('discount', $discount);
         $set('final_price', $finalPrice);
         self::updateInstallmentCalculations($get, $set);
     }
@@ -419,14 +454,12 @@ class InstallmentSaleResource extends Resource
         $interestRate = floatval($get('interest_rate') ?? 0);
         $months = intval($get('months_count') ?? 1);
 
-        // Calculate interest on remaining amount after down payment
         $interestAmount = $remainingAmount * ($interestRate / 100);
         $monthlyInstallment = $months > 0 ? ($remainingAmount + $interestAmount) / $months : 0;
 
         $set('interest_amount', $interestAmount);
         $set('monthly_installment', $monthlyInstallment);
         $set('remaining_amount', $remainingAmount + $interestAmount);
-        $set('paid_amount', $downPayment);
     }
 
     protected static function updateInstallmentFromMonthly(Get $get, Set $set): void
@@ -448,6 +481,11 @@ class InstallmentSaleResource extends Resource
 
         $set('interest_amount', $interestAmount);
         $set('interest_rate', $interestRate);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('sale_type', 'installment');
     }
 
     public static function getPages(): array

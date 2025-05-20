@@ -12,7 +12,6 @@ class EditInstallmentSale extends EditRecord
 
     protected array $cachedItems = [];
 
-
     protected function getHeaderActions(): array
     {
         return [
@@ -27,19 +26,17 @@ class EditInstallmentSale extends EditRecord
 
     protected function beforeSave(): void
     {
-        // Cache old items before update to restore stock
         $this->cachedItems = $this->record->items()->with('product')->get()->all();
     }
 
     protected function afterSave(): void
     {
-        // Restore stock for old items
         foreach ($this->cachedItems as $item) {
             if ($item->product) {
                 $item->product->increment('stock', $item->quantity);
             }
         }
-        // Deduct stock for new items
+        
         $sale = $this->record->fresh('items.product');
         foreach ($sale->items as $item) {
             if ($item->product) {
@@ -48,16 +45,13 @@ class EditInstallmentSale extends EditRecord
         }
     }
 
-
     protected function beforeDelete(): void
     {
-        // Cache sale items before deletion for restocking
         $this->cachedItems = $this->record->items()->with('product')->get()->all();
     }
 
     protected function afterDelete(): void
     {
-        // Restock products after deletion using cached items
         foreach ($this->cachedItems as $item) {
             if ($item->product) {
                 $item->product->increment('stock', $item->quantity);
@@ -65,4 +59,26 @@ class EditInstallmentSale extends EditRecord
         }
     }
 
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        // Get the raw form data including unvalidated inputs
+        $rawData = $this->form->getRawState();
+        
+        // Force include the down_payment from raw form data
+        $data['down_payment'] = (float)($rawData['down_payment'] ?? 0);
+        
+        // Recalculate remaining amount
+        $finalPrice = (float)($data['final_price'] ?? 0);
+        $interestAmount = (float)($data['interest_amount'] ?? 0);
+        $data['remaining_amount'] = max(0, ($finalPrice - $data['down_payment']) + $interestAmount);
+        
+        // Initialize empty payment arrays if they don't exist
+        $data['payment_dates'] = $data['payment_dates'] ?? [];
+        $data['payment_amounts'] = $data['payment_amounts'] ?? [];
+        
+        // Remove the automatic down payment addition
+        // (This is the key change from your original code)
+        
+        return $data;
+    }
 }

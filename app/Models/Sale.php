@@ -90,15 +90,17 @@ class Sale extends Model
     public function getNextPaymentDateAttribute()
     {
         if ($this->status === 'completed') {
-            return null;
+            return 'Ended';
         }
+
+        
 
         $progress = $this->getPaymentScheduleProgress();
         $baseDate = $this->created_at ? Carbon::parse($this->created_at) : now();
         
         return $baseDate->copy()
             ->addMonths($progress['fully_paid_months'] + 1)
-            ->format('Y-m-d');
+            ->format('d-m-Y');
     }
 
     public function deductStock(): void
@@ -199,7 +201,7 @@ class Sale extends Model
     
     $lastPaymentDate = !empty($allPayments) 
         ? end($allPayments)['date'] 
-        : ($this->created_at ? $this->created_at->format('Y-m-d') : null);
+        : ($this->created_at ? $this->created_at->format('d-m-Y') : null);
     
     return [
         'fully_paid_months' => $fullyPaidMonths,
@@ -266,4 +268,56 @@ class Sale extends Model
         $allPayments = $this->getAllPaymentsAttribute();
         return !empty($allPayments) ? end($allPayments) : null;
     }
+
+    // In your Sale model
+public function updatePayment($paymentIndex, $amount, $date)
+{
+    $payments = $this->payment_amounts ?? [];
+    $dates = $this->payment_dates ?? [];
+    
+    if (!isset($payments[$paymentIndex])) {
+        return false;
+    }
+    
+    $payments[$paymentIndex] = $amount;
+    $dates[$paymentIndex] = $date;
+    
+    $this->payment_amounts = $payments;
+    $this->payment_dates = $dates;
+    
+    return $this->recalculatePaymentStatus();
+}
+
+public function deletePayment($paymentIndex)
+{
+    $payments = $this->payment_amounts ?? [];
+    $dates = $this->payment_dates ?? [];
+    
+    if (!isset($payments[$paymentIndex])) {
+        return false;
+    }
+    
+    array_splice($payments, $paymentIndex, 1);
+    array_splice($dates, $paymentIndex, 1);
+    
+    $this->payment_amounts = $payments;
+    $this->payment_dates = $dates;
+    
+    return $this->recalculatePaymentStatus();
+}
+
+protected function recalculatePaymentStatus()
+{
+    $totalPaid = array_sum($this->payment_amounts ?? []);
+    $totalAmount = $this->final_price + ($this->interest_amount ?? 0);
+
+    $this->remaining_amount = max($totalAmount - $totalPaid, 0);
+
+    // Update status based on remaining amount
+    $this->status = ($this->remaining_amount <= 0.01) ? 'completed' : 'ongoing';
+
+    // Save changes
+    return $this->save();
+}
+
 }

@@ -9,6 +9,8 @@ use App\Models\{Client, Sale};
 use Filament\Notifications\Notification;
 use Illuminate\Support\HtmlString;
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class ClientInstallmentPayments extends Page
 {
@@ -17,6 +19,17 @@ class ClientInstallmentPayments extends Page
     protected static ?string $navigationGroup = 'Clients Management';
     protected static ?int $navigationSort = 10;
     protected static ?string $title = 'Client Payments';
+
+    public $editingPayment = null;
+    public $deletingPayment = null;
+    public ?array $form = [];
+
+    protected function getViewData(): array
+    {
+        return [
+            'allPayments' => $this->getAllPaymentsFiltered(),
+        ];
+    }
 
     public function getActions(): array
     {
@@ -212,29 +225,124 @@ class ClientInstallmentPayments extends Page
             ->filter(fn($row) => $row['amount'] !== null && $row['date'] !== null);
     }
 
-    public function getAllPaymentsFiltered()
-    {
-        $query = Sale::with('client')
-            ->where('sale_type', 'installment');
+    public function editPaymentAction($saleId, $paymentIndex)
+{
+    $this->editingPayment = ['saleId' => $saleId, 'paymentIndex' => $paymentIndex];
 
-        if (request('client')) {
-            $query->where('client_id', request('client'));
+    $sale = Sale::find($saleId);
+    if ($sale) {
+        $payment = $sale->getAllPaymentsAttribute()[$paymentIndex] ?? null;
+        if ($payment) {
+            $this->form = [
+                'amount' => $payment['amount'],
+                'date' => $payment['date'],
+            ];
         }
-
-        $payments = [];
-        foreach ($query->get() as $sale) {
-            foreach ($sale->getAllPaymentsAttribute() as $payment) {
-                $payments[] = [
-                    'client' => $sale->client?->name ?? 'Unknown',
-                    'amount' => $payment['amount'],
-                    'date' => $payment['date'],
-                    'sale_id' => $sale->id,
-                ];
-            }
-        }
-
-        usort($payments, fn($a, $b) => strtotime($b['date']) <=> strtotime($a['date']));
-
-        return $payments;
     }
+
+    $this->dispatch('open-modal', id: 'edit-payment');
+}
+
+
+    public function deletePaymentAction($saleId, $paymentIndex)
+    {
+        $this->deletingPayment = ['saleId' => $saleId, 'paymentIndex' => $paymentIndex];
+        $this->dispatch('open-modal', id: 'delete-payment');
+    }
+
+    public function updatePayment()
+{
+    $data = $this->form;
+    $sale = Sale::find($this->editingPayment['saleId']);
+    
+    if ($sale->updatePayment(
+        $this->editingPayment['paymentIndex'],
+        $data['amount'],
+        $data['date']
+    )) {
+        Notification::make()
+            ->title('Payment Updated')
+            ->success()
+            ->send();
+            
+        $this->editingPayment = null;
+        $this->form = [];
+        $this->dispatch('close-modal', id: 'edit-payment');
+    } else {
+        Notification::make()
+            ->title('Failed to update payment')
+            ->danger()
+            ->send();
+    }
+}
+
+    public function confirmDeletePayment()
+    {
+        $sale = Sale::find($this->deletingPayment['saleId']);
+        
+        if ($sale->deletePayment($this->deletingPayment['paymentIndex'])) {
+            Notification::make()
+                ->title('Payment Deleted')
+                ->success()
+                ->send();
+                
+            $this->deletingPayment = null;
+            $this->dispatch('close-modal', id: 'delete-payment');
+        } else {
+            Notification::make()
+                ->title('Failed to delete payment')
+                ->danger()
+                ->send();
+        }
+    }
+
+
+
+
+public function getAllPaymentsFiltered(int $perPage = 10)
+{
+    $query = Sale::with('client')
+        ->where('sale_type', 'installment');
+
+    if (request('client')) {
+        $query->where('client_id', request('client'));
+    }
+
+    $payments = collect();
+
+    foreach ($query->get() as $sale) {
+        $salePayments = $sale->getAllPaymentsAttribute();
+        foreach ($salePayments as $index => $payment) {
+            $payments->push([
+                'client' => $sale->client?->name ?? 'Unknown',
+                'amount' => $payment['amount'],
+                'date' => $payment['date'],
+                'timestamp' => $payment['timestamp'] ?? $payment['created_at'] ?? $payment['date'],
+                'sale_id' => $sale->id,
+                'payment_index' => $index,
+            ]);
+        }
+    }
+
+    // Sort payments by timestamp DESC (latest first)
+    $payments = $payments
+    ->sortByDesc(fn ($p) => sprintf('%s-%03d', $p['date'], 999 - $p['payment_index']))
+    ->values();
+
+
+
+    // Paginate
+    $page = request('page', 1);
+    $total = $payments->count();
+
+    return new LengthAwarePaginator(
+        $payments->forPage($page, $perPage),
+        $total,
+        $perPage,
+        $page,
+        ['path' => request()->url(), 'query' => request()->query()]
+    );
+}
+
+
 }

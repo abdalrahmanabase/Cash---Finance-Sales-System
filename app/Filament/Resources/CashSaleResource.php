@@ -45,22 +45,24 @@ class CashSaleResource extends Resource
     }
 
     protected static function itemsRepeater(): Repeater
-    {
-        return Repeater::make('items')
-            ->relationship()
-            ->minItems(1)
-            ->required()
-            ->schema([
-               Select::make('product_id')
+{
+    return Repeater::make('items')
+        ->relationship()
+        ->minItems(1)
+        ->required()
+        ->schema([
+            Select::make('product_id')
                 ->label('Product')
                 ->relationship('product', 'name')
                 ->searchable()
                 ->preload()
                 ->live()
-                ->afterStateHydrated(function ($state, Set $set) {
+                ->afterStateHydrated(function ($state, Set $set, $record) {
                     if (!$state) return;
                     $product = Product::find($state);
                     $set('available_stock', $product->stock ?? 0);
+                    // Calculate initial values for existing items
+                    $set('total', ($record->unit_price ?? 0) * ($record->quantity ?? 0));
                 })
                 ->afterStateUpdated(function ($state, Set $set) {
                     if (!$state) return;
@@ -70,95 +72,126 @@ class CashSaleResource extends Resource
                 })
                 ->required(),
 
-                TextInput::make('quantity')
-                    ->numeric()
-                    ->default(0)
-                    ->minValue(1)
-                    ->live(onBlur: true)
-                    ->afterStateUpdated(function (Set $set, Get $get) {
-                        $quantity = $get('quantity');
-                        $productId = $get('product_id');
-                        $unitPrice = $get('unit_price');
-                        if ($productId) {
-                            $product = Product::find($productId);
-                            if ($product && $quantity > $product->stock) {
-                                Notification::make()
-                                    ->title('Insufficient stock')
-                                    ->body("Only {$product->stock} available")
-                                    ->danger()
-                                    ->send();
-                                $quantity = $product->stock;
-                                $set('quantity', $quantity);
-                            }
-                        }
-                        $set('total', $quantity * $unitPrice);
-                        self::updateTotals($get, $set);
-                    })
-                    ->required(),
-
-                TextInput::make('unit_price')
-                    ->numeric()
-                    ->prefix('EGP')
-                    ->disabled()
-                    ->dehydrated(),
-
-                TextInput::make('available_stock')
-                    ->label('Available Stock')
-                    ->numeric()
-                    ->disabled()
-                    ->dehydrated(false),
-
-                TextInput::make('total')
-                    ->label('Item Total')
-                    ->numeric()
-                    ->prefix('EGP')
-                    ->disabled()
-                    ->dehydrated(),
-            ])
-            ->live()
-            ->afterStateUpdated(fn (Get $get, Set $set) => self::updateTotals($get, $set))
-            ->columnSpanFull();
-    }
-
-    protected static function pricingFields(): array
-    {
-        return [
-            Hidden::make('total_price')->dehydrated(),
-
-            Select::make('discount_type')
-                ->label('Discount Type')
-                ->options([
-                    'fixed' => 'Fixed (EGP)',
-                    'percent' => 'Percent (%)',
-                ])
-                ->default('fixed')
-                ->live(),
-
-            TextInput::make('discount_value')
-                ->label('Discount')
+            TextInput::make('quantity')
                 ->numeric()
                 ->default(0)
-                ->minValue(0)
+                ->minValue(1)
                 ->live(onBlur: true)
-                ->afterStateUpdated(fn (Get $get, Set $set) => self::updateTotals($get, $set))
-                ->rules([
-                    function (Get $get) {
-                        return function (string $attribute, $value, $fail) use ($get) {
-                            if ($get('discount_type') === 'percent' && $value > 100) {
-                                $fail('The discount percentage cannot exceed 100%.');
-                            }
-                        };
-                    },
-                ]),
+                ->afterStateHydrated(function (Set $set, $record) {
+                    // Initialize total when quantity is hydrated
+                    if ($record) {
+                        $set('total', ($record->unit_price ?? 0) * ($record->quantity ?? 0));
+                    }
+                })
+                ->afterStateUpdated(function (Set $set, Get $get) {
+                    $quantity = $get('quantity');
+                    $productId = $get('product_id');
+                    $unitPrice = $get('unit_price');
+                    if ($productId) {
+                        $product = Product::find($productId);
+                        if ($product && $quantity > $product->stock) {
+                            Notification::make()
+                                ->title('Insufficient stock')
+                                ->body("Only {$product->stock} available")
+                                ->danger()
+                                ->send();
+                            $quantity = $product->stock;
+                            $set('quantity', $quantity);
+                        }
+                    }
+                    $set('total', $quantity * $unitPrice);
+                    self::updateTotals($get, $set);
+                })
+                ->required(),
 
-            TextInput::make('final_price')
-                ->label('Final Price')
+            TextInput::make('unit_price')
                 ->numeric()
                 ->prefix('EGP')
                 ->disabled()
                 ->dehydrated(),
-        ];
-    }
+
+            TextInput::make('available_stock')
+                ->label('Available Stock')
+                ->numeric()
+                ->disabled()
+                ->dehydrated(false),
+
+            TextInput::make('total')
+                ->label('Item Total')
+                ->numeric()
+                ->prefix('EGP')
+                ->disabled()
+                ->dehydrated(),
+        ])
+        ->live()
+        ->afterStateUpdated(fn (Get $get, Set $set) => self::updateTotals($get, $set))
+        ->columnSpanFull();
+}
+
+protected static function pricingFields(): array
+{
+    return [
+        Hidden::make('total_price')
+            ->dehydrated()
+            ->afterStateHydrated(function (Set $set, $state) {
+                // Initialize total_price if it exists
+                if ($state !== null) {
+                    $set('total_price', $state);
+                }
+            }),
+
+        Select::make('discount_type')
+            ->label('Discount Type')
+            ->options([
+                'fixed' => 'Fixed (EGP)',
+                'percent' => 'Percent (%)',
+            ])
+            ->default('fixed')
+            ->live()
+            ->afterStateHydrated(function (Set $set, $state) {
+                // Initialize discount_type if it exists
+                if ($state !== null) {
+                    $set('discount_type', $state);
+                }
+            }),
+
+        TextInput::make('discount')
+            ->label('Discount')
+            ->numeric()
+            ->default(0)
+            ->minValue(0)
+            ->live(onBlur: true)
+            ->afterStateHydrated(function (Set $set, $state) {
+                // Initialize discount if it exists
+                if ($state !== null) {
+                    $set('discount', $state);
+                }
+            })
+            ->afterStateUpdated(fn (Get $get, Set $set) => self::updateTotals($get, $set))
+            ->rules([
+                function (Get $get) {
+                    return function (string $attribute, $value, $fail) use ($get) {
+                        if ($get('discount_type') === 'percent' && $value > 100) {
+                            $fail('The discount percentage cannot exceed 100%.');
+                        }
+                    };
+                },
+            ]),
+
+        TextInput::make('final_price')
+            ->label('Final Price')
+            ->numeric()
+            ->prefix('EGP')
+            ->disabled()
+            ->dehydrated()
+            ->afterStateHydrated(function (Set $set, $state) {
+                // Initialize final_price if it exists
+                if ($state !== null) {
+                    $set('final_price', $state);
+                }
+            }),
+    ];
+}
 
     protected static function additionalInformationSection(): Section
     {
@@ -244,8 +277,8 @@ class CashSaleResource extends Resource
         $items = collect($get('items'))->filter(fn ($item) => $item['product_id'] ?? false);
         $subtotal = $items->sum(fn ($item) => ($item['unit_price'] ?? 0) * ($item['quantity'] ?? 0));
         $discount = match ($get('discount_type')) {
-            'percent' => $subtotal * ($get('discount_value') / 100),
-            default => $get('discount_value') ?? 0
+            'percent' => $subtotal * ($get('discount') / 100),
+            default => $get('discount') ?? 0
         };
         $set('total_price', $subtotal);
         $set('final_price', $subtotal - $discount);

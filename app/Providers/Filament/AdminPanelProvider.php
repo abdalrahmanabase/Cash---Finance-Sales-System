@@ -19,6 +19,8 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Filament\Widgets\SaleOptionsButton;
 use App\Filament\Widgets\ClientInstallmentPaymentWidget;
+use App\Filament\Widgets\CashSalesProfitChart;
+use App\Filament\Widgets\MonthlySalesChart;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -37,6 +39,7 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
                 \App\Filament\Pages\ClientInstallmentPayments::class,
+                \App\Filament\Pages\SalesProfitSummary::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
@@ -44,6 +47,8 @@ class AdminPanelProvider extends PanelProvider
                 // Widgets\FilamentInfoWidget::class,
                 SaleOptionsButton::class, 
                 ClientInstallmentPaymentWidget::class,
+                // MonthlySalesChart::class,
+                // CashSalesProfitChart::class,
             ])
             ->middleware([
                 EncryptCookies::class,

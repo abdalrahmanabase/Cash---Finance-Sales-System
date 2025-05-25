@@ -320,4 +320,18 @@ protected function recalculatePaymentStatus()
     return $this->save();
 }
 
+//for the summary page
+public function getTotalCostAttribute()
+{
+    return $this->items->sum(fn($item) =>
+        $item->quantity * ($item->product->purchase_price ?? 0)
+    );
+}
+
+public function getProfitAttribute()
+{
+    return $this->final_price - $this->total_cost;
+}
+
+
 }

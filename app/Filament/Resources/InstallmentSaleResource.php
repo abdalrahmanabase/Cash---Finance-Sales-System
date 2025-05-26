@@ -192,12 +192,6 @@ class InstallmentSaleResource extends Resource
                             ->disabled()
                             ->dehydrated(),
                         Hidden::make('remaining_amount')
-                            ->default(function (Get $get) {
-                                $finalPrice = $get('final_price') ?? 0;
-                                $downPayment = $get('down_payment') ?? 0;
-                                $interestAmount = $get('interest_amount') ?? 0;
-                                return max(0, ($finalPrice - $downPayment) + $interestAmount);
-                            })
                             ->dehydrated(),
                     ])
                     ->columns(2),
@@ -277,11 +271,11 @@ class InstallmentSaleResource extends Resource
                                 return 'EGP ' . number_format($paid, 2);
                             }),
                         Placeholder::make('remaining_amount')
-                            ->label('Remaining Amount')
-                            ->content(function ($record) {
-                                $remaining = $record?->remaining_amount ?? ($record?->final_price ?? 0);
-                                return 'EGP ' . number_format($remaining, 2);
-                            }),
+                                    ->label('Remaining Amount')
+                                    ->content(function ($record) {
+                                        $remaining = $record?->remaining_amount ?? 0;
+                                        return 'EGP ' . number_format($remaining, 2);
+                                    }),
                         Placeholder::make('down_payment')
                             ->label('Down Payment')
                             ->content(function ($record) {
@@ -449,31 +443,39 @@ class InstallmentSaleResource extends Resource
     {
         $finalPrice = floatval($get('final_price') ?? 0);
         $downPayment = floatval($get('down_payment') ?? 0);
-
-        $remainingAmount = max(0, $finalPrice - $downPayment);
+        
+        // Calculate remaining principal after down payment
+        $remainingPrincipal = max(0, $finalPrice - $downPayment);
+        
         $interestRate = floatval($get('interest_rate') ?? 0);
         $months = intval($get('months_count') ?? 1);
-
-        $interestAmount = $remainingAmount * ($interestRate / 100);
-        $monthlyInstallment = $months > 0 ? ($remainingAmount + $interestAmount) / $months : 0;
+        
+        // Calculate interest on the remaining principal
+        $interestAmount = $remainingPrincipal * ($interestRate / 100);
+        
+        // Total remaining amount (principal + interest)
+        $totalRemaining = $remainingPrincipal + $interestAmount;
+        
+        // Calculate monthly installment
+        $monthlyInstallment = $months > 0 ? $totalRemaining / $months : 0;
 
         $set('interest_amount', $interestAmount);
         $set('monthly_installment', $monthlyInstallment);
-        $set('remaining_amount', $remainingAmount + $interestAmount);
+        $set('remaining_amount', $totalRemaining);
     }
 
     protected static function updateInstallmentFromMonthly(Get $get, Set $set): void
     {
         $finalPrice = $get('final_price') ?? 0;
         $downPayment = $get('down_payment') ?? 0;
-        $remainingAmount = max(0, $finalPrice - $downPayment);
+        $remainingPrincipal = max(0, $finalPrice - $downPayment);
         $months = $get('months_count') ?? 1;
         $monthlyInstallment = $get('monthly_installment') ?? 0;
 
-        if ($months > 0 && $remainingAmount > 0) {
+        if ($months > 0 && $remainingPrincipal > 0) {
             $totalToPay = $monthlyInstallment * $months;
-            $interestAmount = $totalToPay - $remainingAmount;
-            $interestRate = $remainingAmount > 0 ? ($interestAmount / $remainingAmount) * 100 : 0;
+            $interestAmount = $totalToPay - $remainingPrincipal;
+            $interestRate = $remainingPrincipal > 0 ? ($interestAmount / $remainingPrincipal) * 100 : 0;
         } else {
             $interestAmount = 0;
             $interestRate = 0;
@@ -481,7 +483,9 @@ class InstallmentSaleResource extends Resource
 
         $set('interest_amount', $interestAmount);
         $set('interest_rate', $interestRate);
+        $set('remaining_amount', $remainingPrincipal + $interestAmount);
     }
+
 
     public static function getEloquentQuery(): Builder
     {

@@ -130,6 +130,8 @@ class Sale extends Model
 
             $totalAmount = $this->final_price + ($this->interest_amount ?? 0);
             $currentPaid = $this->getPaidAmountAttribute();
+            $downPayment = $this->down_payment ?? 0;
+
             
             if (($currentPaid + $amount) > $totalAmount) {
                 throw new \Exception("Payment amount exceeds remaining balance");
@@ -143,9 +145,8 @@ class Sale extends Model
             $amounts[] = $amount;
 
             $newPaidAmount = $currentPaid + $amount;
-            $newRemainingAmount = max(0, $totalAmount - $newPaidAmount);
+            $newRemainingAmount = max(0, $totalAmount -$downPayment - $newPaidAmount);
             $isCompleted = $newRemainingAmount <= 0.01;
-
             $this->update([
                 'payment_dates' => $dates,
                 'payment_amounts' => $amounts,

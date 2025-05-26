@@ -26,10 +26,10 @@ return [
     ),
     $this->buildStat(
         'This Week Profit',
-        $now->copy()->startOfWeek(),
-        $now->copy()->endOfWeek(),
-        $now->copy()->subWeek()->startOfWeek(),
-        $now->copy()->subWeek()->endOfWeek(),
+        $now->copy()->startOfWeek(Carbon::SATURDAY),
+        $now->copy()->endOfWeek(Carbon::FRIDAY),
+        $now->copy()->subWeek()->startOfWeek(Carbon::SATURDAY),
+        $now->copy()->subWeek()->endOfWeek(Carbon::FRIDAY),
         'week'
     ),
     $this->buildStat(

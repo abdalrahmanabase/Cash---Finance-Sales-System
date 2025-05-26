@@ -141,42 +141,48 @@ protected static function pricingFields(): array
             }),
 
         Select::make('discount_type')
-            ->label('Discount Type')
-            ->options([
-                'fixed' => 'Fixed (EGP)',
-                'percent' => 'Percent (%)',
-            ])
-            ->default('fixed')
-            ->live()
-            ->afterStateHydrated(function (Set $set, $state) {
-                // Initialize discount_type if it exists
-                if ($state !== null) {
-                    $set('discount_type', $state);
-                }
-            }),
-
-        TextInput::make('discount')
-            ->label('Discount')
-            ->numeric()
-            ->default(0)
-            ->minValue(0)
-            ->live(onBlur: true)
-            ->afterStateHydrated(function (Set $set, $state) {
-                // Initialize discount if it exists
-                if ($state !== null) {
-                    $set('discount', $state);
-                }
-            })
-            ->afterStateUpdated(fn (Get $get, Set $set) => self::updateTotals($get, $set))
-            ->rules([
-                function (Get $get) {
-                    return function (string $attribute, $value, $fail) use ($get) {
-                        if ($get('discount_type') === 'percent' && $value > 100) {
-                            $fail('The discount percentage cannot exceed 100%.');
-                        }
-                    };
-                },
-            ]),
+                            ->label('Discount Type')
+                            ->options([
+                                'fixed' => 'Fixed (EGP)',
+                                'percent' => 'Percent (%)',
+                            ])
+                            ->default('fixed')
+                            ->dehydrated(false)
+                            ->live()
+                            ->afterStateHydrated(function (Set $set, $state, $record) {
+                                if (!$record) return;
+                                $subtotal = $record->total_price ?? 0;
+                                $discount = $record->discount ?? 0;
+                                if ($subtotal > 0 && $discount > 0) {
+                                    $percent = round(($discount / $subtotal) * 100, 2);
+                                    if (abs($discount - ($subtotal * ($percent / 100))) < 0.01) {
+                                        $set('discount_type', 'percent');
+                                        return;
+                                    }
+                                }
+                                $set('discount_type', 'fixed');
+                            }),
+                        TextInput::make('discount_value')
+                            ->label('Discount')
+                            ->numeric()
+                            ->default(0)
+                            ->minValue(0)
+                            ->live(onBlur: true)
+                            ->afterStateHydrated(function (Set $set, $state, $record) {
+                                if (!$record) return;
+                                $subtotal = $record->total_price ?? 0;
+                                $discount = $record->discount ?? 0;
+                                if ($subtotal > 0 && $discount > 0) {
+                                    $percent = round(($discount / $subtotal) * 100, 2);
+                                    if (abs($discount - ($subtotal * ($percent / 100))) < 0.01) {
+                                        $set('discount_value', $percent);
+                                        return;
+                                    }
+                                }
+                                $set('discount_value', $discount);
+                            })
+                            ->afterStateUpdated(fn (Get $get, Set $set) => InstallmentSaleResource::updateTotals($get, $set)),
+                        Hidden::make('discount')->dehydrated(true),
 
         TextInput::make('final_price')
             ->label('Final Price')

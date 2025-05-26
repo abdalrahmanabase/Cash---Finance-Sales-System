@@ -1,25 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Filament\Pages\ClientInstallmentPayments;
 
 Route::view('/', 'welcome');
 
+Route::get('/client-installment-payments', ClientInstallmentPayments::class)
+    ->name('filament.pages.client-installment-payments');
 
 
 
-// routes/web.php
-// Route::get('/test-sale/{id}', function($id) {
-//     $sale = \App\Models\Sale::findOrFail($id);
-    
-//     // Manually trigger stock deduction
-//     $sale->deductStock();
-    
-//     // Verify results
-//     return response()->json([
-//         'sale' => $sale->only(['id', 'sale_type']),
-//         'inventory_updates' => $sale->verifyInventoryUpdate(),
-//         'logs' => \DB::table('inventory_histories')
-//             ->where('notes', 'like', "%sale #{$id}%")
-//             ->get()
-//     ]);
-// });
+

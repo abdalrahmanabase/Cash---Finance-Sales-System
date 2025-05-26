@@ -28,7 +28,8 @@ class Sale extends Model
         'payment_dates',
         'payment_amounts',
         'status',
-        'notes'
+        'notes',
+        'preferred_payment_day',
     ];
 
     protected $casts = [
@@ -93,14 +94,23 @@ class Sale extends Model
             return 'Ended';
         }
 
-        
-
         $progress = $this->getPaymentScheduleProgress();
         $baseDate = $this->created_at ? Carbon::parse($this->created_at) : now();
-        
-        return $baseDate->copy()
+
+        // Use the preferred payment day if set, otherwise default to the same day
+        $preferredDay = $this->preferred_payment_day ?? $baseDate->day;
+
+        // Calculate the next payment date
+        $nextPaymentDate = $baseDate->copy()
             ->addMonths($progress['fully_paid_months'] + 1)
-            ->format('d-m-Y');
+            ->day($preferredDay);
+
+        // Ensure the date is valid (e.g., handle February 30th)
+        if (!$nextPaymentDate->isValid()) {
+            $nextPaymentDate = $nextPaymentDate->endOfMonth();
+        }
+
+        return $nextPaymentDate->format('d-m-Y');
     }
 
     public function deductStock(): void
@@ -332,6 +342,30 @@ public function getTotalCostAttribute()
 public function getProfitAttribute()
 {
     return $this->final_price - $this->total_cost;
+}
+
+
+public function getDynamicStatusAttribute(): string
+{
+    if ($this->status === 'completed') {
+        return 'completed'; // Fully Paid
+    }
+
+    if ($this->isPaymentOverdue()) {
+        $daysLate = Carbon::now()->diffInDays(Carbon::parse($this->next_payment_date), false);
+
+        if ($daysLate <= -3) {
+            return 'danger'; // Late by more than 3 days
+        }
+
+        return 'orange'; // Late by up to 3 days
+    }
+
+    if ($this->remaining_amount > 0 && $this->remaining_amount < $this->monthly_installment) {
+        return 'beige'; // Partially Paid
+    }
+
+    return 'success'; // Upcoming
 }
 
 

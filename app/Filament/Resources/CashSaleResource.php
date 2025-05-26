@@ -226,10 +226,6 @@ protected static function pricingFields(): array
                     ->money('EGP')
                     ->sortable(),
 
-                TextColumn::make('status')
-                    ->badge()
-                    ->color('success')
-                    ->formatStateUsing(fn () => 'Completed'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

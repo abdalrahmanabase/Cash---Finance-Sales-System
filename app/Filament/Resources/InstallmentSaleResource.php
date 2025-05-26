@@ -255,6 +255,14 @@ class InstallmentSaleResource extends Resource
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Get $get, Set $set) => InstallmentSaleResource::updateInstallmentFromMonthly($get, $set))
                             ->required(),
+                        TextInput::make('preferred_payment_day')
+                        ->label('Preferred Payment Day')
+                        ->numeric()
+                        ->minValue(1)
+                        ->maxValue(31)
+                        ->helperText('Enter the day of the month (e.g., 5 for the 5th of each month).')
+                        ->nullable(),
+
                         Hidden::make('payment_dates')->default([]),
                         Hidden::make('payment_amounts')->default([]),
                     ])

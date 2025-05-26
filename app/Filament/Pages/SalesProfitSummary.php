@@ -57,7 +57,7 @@ class SalesProfitSummary extends Page implements HasTable
             ->columns([
                 TextColumn::make('created_at')
                     ->label('Date')
-                    ->formatStateUsing(fn ($state) => Carbon::parse($state)->format('d, M, Y'))
+                    ->date('d-m-Y')
                     ->sortable(),
 
                 TextColumn::make('final_price')

@@ -218,7 +218,7 @@ protected static function pricingFields(): array
             ->columns([
                 TextColumn::make('created_at')
                     ->label('Date')
-                    ->dateTime()
+                    ->date('d-m-Y')
                     ->sortable(),
 
                 TextColumn::make('final_price')

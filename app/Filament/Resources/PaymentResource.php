@@ -28,7 +28,14 @@ class PaymentResource extends Resource
                     ->label('Client Name')
                     ->sortable()
                     ->searchable()
-                    ->url(fn ($record) => route('filament.pages.client-installment-payments', ['client' => $record->client_id]))
+                    // Link to the ClientInstallmentPayments page, pre‐filtering by this client_id:
+                    ->url(fn (Sale $record) => route('filament.pages.client-installment-payments', [
+                        'tableFilters' => [
+                            'client_id' => [
+                                'value' => $record->client_id,
+                            ],
+                        ],
+                    ]))
                     ->openUrlInNewTab(),
 
                 TextColumn::make('next_payment_date')
@@ -46,16 +53,18 @@ class PaymentResource extends Resource
                     ->money('EGP')
                     ->getStateUsing(function (Sale $record) {
                         $progress = $record->getPaymentScheduleProgress();
-                        return $progress['next_payment_due'] > 0 ? $progress['next_payment_due'] : $record->monthly_installment;
+                        return $progress['next_payment_due'] > 0
+                            ? $progress['next_payment_due']
+                            : $record->monthly_installment;
                     }),
 
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
                     ->color(fn ($state, Sale $record) => match (true) {
-                        $record->isPaymentOverdue() => 'danger',
+                        $record->isPaymentOverdue()    => 'danger',
                         $record->status === 'completed' => 'success',
-                        default => 'primary',
+                        default                         => 'primary',
                     })
                     ->formatStateUsing(function ($state, Sale $record) {
                         if ($record->status === 'completed') {
@@ -74,26 +83,32 @@ class PaymentResource extends Resource
                     ->options(
                         collect(range(-3, 3))
                             ->mapWithKeys(fn ($i) => [
-                                Carbon::now()->copy()->addMonths($i)->format('Y-m') => Carbon::now()->copy()->addMonths($i)->translatedFormat('F Y')
+                                Carbon::now()
+                                    ->copy()
+                                    ->addMonths($i)
+                                    ->format('Y-m')
+                                    => Carbon::now()
+                                        ->copy()
+                                        ->addMonths($i)
+                                        ->translatedFormat('F Y'),
                             ])
                             ->toArray()
                         + [
                             'overdue' => 'Overdue',
-                            'all' => 'All',
+                            'all'     => 'All',
                         ]
                     )
                     ->default(Carbon::now()->format('Y-m'))
                     ->query(function (Builder $query, array $data) {
                         $value = $data['value'] ?? Carbon::now()->format('Y-m');
                         if ($value === 'all') {
-                            // No filter, show all
                             return $query;
                         }
                         if ($value === 'overdue') {
-                            return $query->where('next_payment_date', '<', now()->format('Y-m-d'))
-                                         ->where('status', 'ongoing');
+                            return $query
+                                ->where('next_payment_date', '<', now()->format('Y-m-d'))
+                                ->where('status', 'ongoing');
                         }
-                        // Otherwise, filter by month
                         return $query->whereRaw("DATE_FORMAT(next_payment_date, '%Y-%m') = ?", [$value]);
                     }),
             ])
@@ -103,7 +118,7 @@ class PaymentResource extends Resource
             ->headerActions([
                 Tables\Actions\Action::make('Go to Client Payments')
                     ->label('Client Payments')
-                    ->url(route('filament.pages.client-installment-payments'))
+                    ->url(fn () => route('filament.pages.client-installment-payments'))
                     ->icon('heroicon-o-arrow-right'),
             ]);
     }

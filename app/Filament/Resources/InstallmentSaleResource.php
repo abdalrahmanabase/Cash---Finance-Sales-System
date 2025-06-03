@@ -18,13 +18,10 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Fieldset;
 use Illuminate\Support\Carbon;
-use App\Filament\Resources\ClientResource;
-use App\Filament\Resources\ProductResource;
 use Illuminate\Database\Eloquent\Builder;
 
 class InstallmentSaleResource extends Resource
@@ -39,10 +36,15 @@ class InstallmentSaleResource extends Resource
     {
         return $form
             ->schema([
+                // ────────────────────────
+                // Sale Information
+                // ────────────────────────
                 Section::make('Sale Information')
                     ->schema([
                         Hidden::make('sale_type')->default('installment'),
                         Hidden::make('status')->default('ongoing'),
+
+                        // Client dropdown
                         Select::make('client_id')
                             ->label('Client')
                             ->relationship('client', 'name')
@@ -50,13 +52,15 @@ class InstallmentSaleResource extends Resource
                             ->preload()
                             ->required()
                             ->suffixAction(
-                                fn () => \Filament\Forms\Components\Actions\Action::make('createClient')
+                                fn() => \Filament\Forms\Components\Actions\Action::make('createClient')
                                     ->label('Create Client')
                                     ->icon('heroicon-o-plus')
                                     ->url(route('filament.admin.resources.clients.create'))
                             ),
+
+                        // Repeater saves directly to sale_items via relationship()
                         Repeater::make('items')
-                            ->relationship()
+                            ->relationship()                // tells Filament “Sale→items relationship”
                             ->minItems(1)
                             ->required()
                             ->schema([
@@ -66,59 +70,59 @@ class InstallmentSaleResource extends Resource
                                     ->searchable()
                                     ->preload()
                                     ->live()
-                                    ->suffixAction(
-                                        fn () => \Filament\Forms\Components\Actions\Action::make('createProduct')
-                                            ->label('Create Product')
-                                            ->icon('heroicon-o-plus')
-                                            ->url(route('filament.admin.resources.products.create'))
-                                    )
                                     ->afterStateHydrated(function ($state, Set $set) {
                                         if (!$state) return;
                                         $product = Product::find($state);
-                                        $set('available_stock', $product->stock ?? 0);
+                                        $set('available_stock', $product?->stock ?? 0);
                                     })
                                     ->afterStateUpdated(function ($state, Set $set) {
                                         if (!$state) return;
                                         $product = Product::find($state);
-                                        $set('unit_price', $product->cash_price);
-                                        $set('available_stock', $product->stock ?? 0);
+                                        $set('unit_price', $product?->cash_price ?? 0);
+                                        $set('available_stock', $product?->stock ?? 0);
                                     })
                                     ->required(),
+
                                 TextInput::make('quantity')
+                                    ->label('Quantity')
                                     ->numeric()
                                     ->default(0)
                                     ->minValue(1)
                                     ->live(onBlur: true)
                                     ->afterStateUpdated(function (Set $set, Get $get) {
-                                        $quantity = $get('quantity');
-                                        $productId = $get('product_id');
-                                        $unitPrice = $get('unit_price');
-                                        if ($productId) {
-                                            $product = Product::find($productId);
-                                            if ($product && $quantity > $product->stock) {
+                                        $qty = $get('quantity');
+                                        $prodId = $get('product_id');
+                                        $up = $get('unit_price');
+                                        if ($prodId) {
+                                            $product = Product::find($prodId);
+                                            if ($product && $qty > $product->stock) {
                                                 Notification::make()
                                                     ->title('Insufficient stock')
                                                     ->body("Only {$product->stock} available")
                                                     ->danger()
                                                     ->send();
-                                                $quantity = $product->stock;
-                                                $set('quantity', $quantity);
+                                                $qty = $product->stock;
+                                                $set('quantity', $qty);
                                             }
                                         }
-                                        $set('total', $quantity * $unitPrice);
+                                        $set('total', $qty * $up);
                                         InstallmentSaleResource::updateTotals($get, $set);
                                     })
                                     ->required(),
+
                                 TextInput::make('unit_price')
+                                    ->label('Unit Price')
                                     ->numeric()
                                     ->prefix('EGP')
                                     ->disabled()
                                     ->dehydrated(),
+
                                 TextInput::make('available_stock')
                                     ->label('Available Stock')
                                     ->numeric()
                                     ->disabled()
                                     ->dehydrated(false),
+
                                 TextInput::make('total')
                                     ->label('Item Total')
                                     ->numeric()
@@ -126,26 +130,28 @@ class InstallmentSaleResource extends Resource
                                     ->disabled()
                                     ->dehydrated()
                                     ->afterStateHydrated(function (Set $set, Get $get) {
-                                        $quantity = $get('quantity') ?? 0;
-                                        $unitPrice = $get('unit_price') ?? 0;
-                                        $set('total', $quantity * $unitPrice);
+                                        $qty = $get('quantity') ?? 0;
+                                        $up  = $get('unit_price') ?? 0;
+                                        $set('total', $qty * $up);
                                     }),
                             ])
                             ->live()
                             ->afterStateUpdated(fn (Get $get, Set $set) => InstallmentSaleResource::updateTotals($get, $set))
                             ->afterStateHydrated(function (Get $get, Set $set, $state) {
                                 foreach ($state as $index => $item) {
-                                    $quantity = $item['quantity'] ?? 0;
-                                    $unitPrice = $item['unit_price'] ?? 0;
-                                    $set("items.{$index}.total", $quantity * $unitPrice);
+                                    $qty = $item['quantity'] ?? 0;
+                                    $up  = $item['unit_price'] ?? 0;
+                                    $set("items.{$index}.total", $qty * $up);
                                 }
-                            })  
+                            })
                             ->columnSpanFull(),
+
                         Hidden::make('total_price')->dehydrated(),
+
                         Select::make('discount_type')
                             ->label('Discount Type')
                             ->options([
-                                'fixed' => 'Fixed (EGP)',
+                                'fixed'   => 'Fixed (EGP)',
                                 'percent' => 'Percent (%)',
                             ])
                             ->default('fixed')
@@ -156,14 +162,15 @@ class InstallmentSaleResource extends Resource
                                 $subtotal = $record->total_price ?? 0;
                                 $discount = $record->discount ?? 0;
                                 if ($subtotal > 0 && $discount > 0) {
-                                    $percent = round(($discount / $subtotal) * 100, 2);
-                                    if (abs($discount - ($subtotal * ($percent / 100))) < 0.01) {
+                                    $pct = round(($discount / $subtotal) * 100, 2);
+                                    if (abs($discount - ($subtotal * ($pct / 100))) < 0.01) {
                                         $set('discount_type', 'percent');
                                         return;
                                     }
                                 }
                                 $set('discount_type', 'fixed');
                             }),
+
                         TextInput::make('discount_value')
                             ->label('Discount')
                             ->numeric()
@@ -175,30 +182,37 @@ class InstallmentSaleResource extends Resource
                                 $subtotal = $record->total_price ?? 0;
                                 $discount = $record->discount ?? 0;
                                 if ($subtotal > 0 && $discount > 0) {
-                                    $percent = round(($discount / $subtotal) * 100, 2);
-                                    if (abs($discount - ($subtotal * ($percent / 100))) < 0.01) {
-                                        $set('discount_value', $percent);
+                                    $pct = round(($discount / $subtotal) * 100, 2);
+                                    if (abs($discount - ($subtotal * ($pct / 100))) < 0.01) {
+                                        $set('discount_value', $pct);
                                         return;
                                     }
                                 }
                                 $set('discount_value', $discount);
                             })
                             ->afterStateUpdated(fn (Get $get, Set $set) => InstallmentSaleResource::updateTotals($get, $set)),
+
                         Hidden::make('discount')->dehydrated(true),
+
                         TextInput::make('final_price')
                             ->label('Final Price')
                             ->numeric()
                             ->prefix('EGP')
                             ->disabled()
                             ->dehydrated(),
-                        Hidden::make('remaining_amount')
-                            ->dehydrated(),
+
+                        Hidden::make('remaining_amount')->dehydrated(),
                     ])
                     ->columns(2),
 
+
+                // ────────────────────────
+                // Installment Plan
+                // ────────────────────────
                 Section::make('Installment Plan')
                     ->schema([
                         TextInput::make('down_payment')
+                            ->label('Down Payment')
                             ->numeric()
                             ->required()
                             ->default(0)
@@ -209,8 +223,7 @@ class InstallmentSaleResource extends Resource
                             })
                             ->afterStateUpdated(function (Get $get, Set $set, $state) {
                                 $downPayment = floatval($state);
-                                $finalPrice = floatval($get('final_price') ?? 0);
-                                
+                                $finalPrice  = floatval($get('final_price') ?? 0);
                                 if ($downPayment > $finalPrice) {
                                     Notification::make()
                                         ->title('Invalid down payment')
@@ -219,10 +232,10 @@ class InstallmentSaleResource extends Resource
                                         ->send();
                                     $downPayment = $finalPrice;
                                 }
-                                
                                 $set('down_payment', $downPayment);
                                 static::updateInstallmentCalculations($get, $set);
                             }),
+
                         TextInput::make('interest_rate')
                             ->label('Interest Rate')
                             ->numeric()
@@ -233,12 +246,14 @@ class InstallmentSaleResource extends Resource
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Get $get, Set $set) => InstallmentSaleResource::updateInstallmentCalculations($get, $set))
                             ->required(),
+
                         TextInput::make('interest_amount')
                             ->label('Interest Amount')
                             ->numeric()
                             ->prefix('EGP')
                             ->disabled()
                             ->dehydrated(),
+
                         TextInput::make('months_count')
                             ->label('Installment Months')
                             ->numeric()
@@ -248,6 +263,7 @@ class InstallmentSaleResource extends Resource
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Get $get, Set $set) => InstallmentSaleResource::updateInstallmentCalculations($get, $set))
                             ->required(),
+
                         TextInput::make('monthly_installment')
                             ->label('Monthly Installment')
                             ->numeric()
@@ -255,71 +271,93 @@ class InstallmentSaleResource extends Resource
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Get $get, Set $set) => InstallmentSaleResource::updateInstallmentFromMonthly($get, $set))
                             ->required(),
+
                         TextInput::make('preferred_payment_day')
-                        ->label('Preferred Payment Day')
-                        ->numeric()
-                        ->minValue(1)
-                        ->maxValue(31)
-                        ->helperText('Enter the day of the month (e.g., 5 for the 5th of each month).')
-                        ->nullable(),
+                            ->label('Preferred Payment Day')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(31)
+                            ->helperText('Day of month (e.g. 5 → pay every month on the 5th)')
+                            ->nullable(),
 
                         Hidden::make('payment_dates')->default([]),
                         Hidden::make('payment_amounts')->default([]),
+
+                        // We removed any “Hidden::make('next_payment_date')->afterState…” from here.
+                        // The model itself (in Sale::saving) will compute & persist next_payment_date.
                     ])
                     ->columns(2),
 
+
+                // ────────────────────────
+                // Payment Summary / History (read-only)
+                // ────────────────────────
                 Section::make('Payment Summary')
+                    ->schema([
+                        Grid::make(4)
                             ->schema([
-                                Grid::make(4)
-                                    ->schema([
-                        Placeholder::make('paid_amount')
-                            ->label('Paid Amount')
-                            ->content(function ($record) {
-                                $paid = $record?->paid_amount ?? 0;
-                                return 'EGP ' . number_format($paid, 2);
-                            }),
-                        Placeholder::make('remaining_amount')
+                                Placeholder::make('paid_amount')
+                                    ->label('Paid Amount')
+                                    ->content(fn ($record) => $record?->paid_amount
+                                        ? 'EGP ' . number_format($record->paid_amount, 2)
+                                        : 'EGP 0.00'
+                                    ),
+
+                                Placeholder::make('remaining_amount')
                                     ->label('Remaining Amount')
-                                    ->content(function ($record) {
-                                        $remaining = $record?->remaining_amount ?? 0;
-                                        return 'EGP ' . number_format($remaining, 2);
-                                    }),
-                        Placeholder::make('down_payment')
-                            ->label('Down Payment')
-                            ->content(function ($record) {
-                                $down = $record?->down_payment ?? 0;
-                                return 'EGP ' . number_format($down, 2);
-                            }),
-                        Placeholder::make('months_progress')
-                            ->label('Months Progress')
-                            ->content(function ($record) {
-                                if (!$record) return '0/0';
-                                $progress = $record->getPaymentScheduleProgress();
-                                return $progress['fully_paid_months'] . '/' . $record->months_count;
-                            }),
-                    ]),
+                                    ->content(fn ($record) => $record?->remaining_amount
+                                        ? 'EGP ' . number_format($record->remaining_amount, 2)
+                                        : 'EGP 0.00'
+                                    ),
+
+                                Placeholder::make('down_payment')
+                                    ->label('Down Payment')
+                                    ->content(fn ($record) => $record?->down_payment
+                                        ? 'EGP ' . number_format($record->down_payment, 2)
+                                        : 'EGP 0.00'
+                                    ),
+
+                                Placeholder::make('months_progress')
+                                    ->label('Months Progress')
+                                    ->content(fn ($record) => $record
+                                        ? $record->getPaymentScheduleProgress()['fully_paid_months']
+                                          . '/' . $record->months_count
+                                        : '0/0'
+                                    ),
+                            ]),
+
                         Fieldset::make('Payment History')
                             ->schema([
-                                Placeholder::make('')
+                                Placeholder::make('history')
+                                    ->label('Payment History')
                                     ->content(function ($record) {
-                                        if (!$record) return 'No payments recorded yet.';
+                                        if (!$record) {
+                                            return 'No payments recorded yet.';
+                                        }
                                         $payments = $record->all_payments;
-                                        if (empty($payments)) return 'No payments recorded yet.';
+                                        if (empty($payments)) {
+                                            return 'No payments recorded yet.';
+                                        }
                                         $html = '<div class="space-y-2">';
-                                        foreach ($payments as $payment) {
+                                        foreach ($payments as $p) {
                                             $html .= '<div class="flex justify-between border-b pb-1">';
-                                            $html .= '<span>' . \Carbon\Carbon::parse($payment['date'])->format('d-m-Y') . '</span>';
-                                            $html .= '<span class="font-medium">EGP ' . number_format($payment['amount'], 2) . '</span>';
+                                            $d    = Carbon::parse($p['date'])->format('d-m-Y');
+                                            $amt  = number_format($p['amount'], 2);
+                                            $html .= "<span>{$d}</span>";
+                                            $html .= "<span class=\"font-medium\">EGP {$amt}</span>";
                                             $html .= '</div>';
                                         }
                                         $html .= '</div>';
                                         return new \Illuminate\Support\HtmlString($html);
                                     })
-                                    ->extraAttributes(['class' => 'mt-4']),
-                            ])
-                            ->columnSpanFull(),
+                                    ->extraAttributes(['class' => 'mt-4'])
+                                    ->columnSpanFull(),
+                            ]),
                     ]),
 
+                // ────────────────────────
+                // Additional Information
+                // ────────────────────────
                 Section::make('Additional Information')
                     ->schema([
                         TextInput::make('notes')
@@ -334,52 +372,67 @@ class InstallmentSaleResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->where('sale_type', 'installment'))
+            ->modifyQueryUsing(fn(Builder $query) => $query->where('sale_type', 'installment'))
             ->columns([
-                TextColumn::make('created_at')
+                 TextColumn::make('created_at')
                     ->label('Sold At')
                     ->date('d-m-Y')
                     ->sortable(),
+
                 TextColumn::make('next_payment_date')
-                    ->label('Next Payment Date')
-                    ->formatStateUsing(fn ($state, $record) => $record->next_payment_date),
+    ->label('Next Payment Date')
+    ->formatStateUsing(fn($state, $record) =>
+        $state
+            ? $state->format('d-m-Y') // $state is Carbon instance or null
+            : ($record->status === 'completed' ? 'Ended' : '—')
+    )
+    ->sortable(),
+
+
                 TextColumn::make('client.name')
                     ->label('Client')
                     ->searchable(),
+
                 TextColumn::make('final_price')
                     ->label('Total Amount')
                     ->money('EGP')
                     ->sortable(),
+
                 TextColumn::make('down_payment')
                     ->label('Down Payment')
                     ->money('EGP'),
+
                 TextColumn::make('paid_amount')
                     ->label('Paid')
                     ->money('EGP'),
+
                 TextColumn::make('remaining_amount')
                     ->label('Remaining')
                     ->money('EGP'),
+
                 TextColumn::make('months_count')
                     ->label('Months Paid')
-                    ->formatStateUsing(function ($state, $record) {
-                        $progress = $record->getPaymentScheduleProgress();
-                        return $progress['fully_paid_months'] . '/' . $state;
-                    }),
+                    ->formatStateUsing(fn($state, $record) => 
+                        $record->getPaymentScheduleProgress()['fully_paid_months'] . "/{$state}"
+                    ),
+
                 TextColumn::make('monthly_installment')
                     ->label('Monthly')
                     ->money('EGP'),
+
                 TextColumn::make('status')
+                    ->label('Status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state) => match($state) {
                         'completed' => 'success',
-                        'ongoing' => 'warning',
-                        default => 'gray',
+                        'ongoing'   => 'warning',
+                        default     => 'gray',
                     }),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'ongoing' => 'Ongoing',
+                        'ongoing'   => 'Ongoing',
                         'completed' => 'Completed',
                     ]),
             ])
@@ -396,13 +449,12 @@ class InstallmentSaleResource extends Resource
                             }
                         }
                     }),
+
                 Tables\Actions\Action::make('view_items')
                     ->icon('heroicon-o-eye')
-                    ->modalContent(function (Sale $record) {
-                        return view('filament.sale-items', [
-                            'items' => $record->items()->with('product')->get()
-                        ]);
-                    })
+                    ->modalContent(fn(Sale $record) => view('filament.sale-items', [
+                        'items' => $record->items()->with('product')->get()
+                    ]))
                     ->modalHeading('Sale Items'),
             ])
             ->bulkActions([
@@ -429,71 +481,63 @@ class InstallmentSaleResource extends Resource
 
     protected static function updateTotals(Get $get, Set $set): void
     {
-        $items = collect($get('items'))->filter(fn ($item) => $item['product_id'] ?? false);
-        $subtotal = $items->sum(fn ($item) => ($item['unit_price'] ?? 0) * ($item['quantity'] ?? 0));
-        $discountType = $get('discount_type') ?? 'fixed';
-        $discountValue = floatval($get('discount_value') ?? 0);
+        $items   = collect($get('items'))->filter(fn($item) => !empty($item['product_id']));
+        $subtotal= $items->sum(fn($item) => ($item['unit_price'] ?? 0) * ($item['quantity'] ?? 0));
+        $discType= $get('discount_type') ?? 'fixed';
+        $discVal = floatval($get('discount_value') ?? 0);
 
-        if ($discountType === 'percent') {
-            $discount = $subtotal * ($discountValue / 100);
+        if ($discType === 'percent') {
+            $discount = $subtotal * ($discVal / 100);
         } else {
-            $discount = $discountValue;
+            $discount = $discVal;
         }
 
         $finalPrice = $subtotal - $discount;
         $set('total_price', $subtotal);
         $set('discount', $discount);
         $set('final_price', $finalPrice);
+
         self::updateInstallmentCalculations($get, $set);
     }
 
     protected static function updateInstallmentCalculations(Get $get, Set $set): void
     {
         $finalPrice = floatval($get('final_price') ?? 0);
-        $downPayment = floatval($get('down_payment') ?? 0);
-        
-        // Calculate remaining principal after down payment
-        $remainingPrincipal = max(0, $finalPrice - $downPayment);
-        
-        $interestRate = floatval($get('interest_rate') ?? 0);
-        $months = intval($get('months_count') ?? 1);
-        
-        // Calculate interest on the remaining principal
-        $interestAmount = $remainingPrincipal * ($interestRate / 100);
-        
-        // Total remaining amount (principal + interest)
-        $totalRemaining = $remainingPrincipal + $interestAmount;
-        
-        // Calculate monthly installment
-        $monthlyInstallment = $months > 0 ? $totalRemaining / $months : 0;
+        $down       = floatval($get('down_payment') ?? 0);
+        $remainPri  = max(0, $finalPrice - $down);
+        $irate      = floatval($get('interest_rate') ?? 0);
+        $months     = intval($get('months_count') ?? 1);
 
-        $set('interest_amount', $interestAmount);
-        $set('monthly_installment', $monthlyInstallment);
-        $set('remaining_amount', $totalRemaining);
+        $interestAmt = $remainPri * ($irate / 100);
+        $totalRem    = $remainPri + $interestAmt;
+        $monthlyInst = $months > 0 ? ($totalRem / $months) : 0;
+
+        $set('interest_amount', $interestAmt);
+        $set('monthly_installment', $monthlyInst);
+        $set('remaining_amount', $totalRem);
     }
 
     protected static function updateInstallmentFromMonthly(Get $get, Set $set): void
     {
-        $finalPrice = $get('final_price') ?? 0;
-        $downPayment = $get('down_payment') ?? 0;
-        $remainingPrincipal = max(0, $finalPrice - $downPayment);
-        $months = $get('months_count') ?? 1;
-        $monthlyInstallment = $get('monthly_installment') ?? 0;
+        $finalPrice = floatval($get('final_price') ?? 0);
+        $down       = floatval($get('down_payment') ?? 0);
+        $remainPri  = max(0, $finalPrice - $down);
+        $months     = intval($get('months_count') ?? 1);
+        $monthlyInst= floatval($get('monthly_installment') ?? 0);
 
-        if ($months > 0 && $remainingPrincipal > 0) {
-            $totalToPay = $monthlyInstallment * $months;
-            $interestAmount = $totalToPay - $remainingPrincipal;
-            $interestRate = $remainingPrincipal > 0 ? ($interestAmount / $remainingPrincipal) * 100 : 0;
+        if ($months > 0 && $remainPri > 0) {
+            $totalToPay    = $monthlyInst * $months;
+            $interestAmt   = $totalToPay - $remainPri;
+            $interestRate  = $remainPri > 0 ? ($interestAmt / $remainPri) * 100 : 0;
         } else {
-            $interestAmount = 0;
+            $interestAmt  = 0;
             $interestRate = 0;
         }
 
-        $set('interest_amount', $interestAmount);
+        $set('interest_amount', $interestAmt);
         $set('interest_rate', $interestRate);
-        $set('remaining_amount', $remainingPrincipal + $interestAmount);
+        $set('remaining_amount', $remainPri + $interestAmt);
     }
-
 
     public static function getEloquentQuery(): Builder
     {
@@ -504,8 +548,8 @@ class InstallmentSaleResource extends Resource
     {
         return [
             'index' => \App\Filament\Resources\InstallmentSaleResource\Pages\ListInstallmentSales::route('/'),
-            'create' => \App\Filament\Resources\InstallmentSaleResource\Pages\CreateInstallmentSale::route('/create'),
-            'edit' => \App\Filament\Resources\InstallmentSaleResource\Pages\EditInstallmentSale::route('/{record}/edit'),
+            'create'=> \App\Filament\Resources\InstallmentSaleResource\Pages\CreateInstallmentSale::route('/create'),
+            'edit'  => \App\Filament\Resources\InstallmentSaleResource\Pages\EditInstallmentSale::route('/{record}/edit'),
         ];
     }
 }

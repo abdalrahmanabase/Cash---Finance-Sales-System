@@ -14,7 +14,7 @@ class ClientGuarantor extends Model
         'name',
         'address',
         'phone',
-        'alternative_phone',
+        'secondary_phone',
         'proof_of_address',
         'id_photo',
         'job',

@@ -24,7 +24,6 @@ return new class extends Migration
             $table->decimal('final_price', 12, 2);
             $table->decimal('down_payment', 12, 2)->default(0); 
             $table->decimal('monthly_installment', 12, 2)->nullable();
-            $table->decimal('paid_amount', 12, 2)->default(0);
             $table->decimal('remaining_amount', 12, 2)->nullable();
             $table->integer('months_count')->nullable();
 
@@ -34,6 +33,8 @@ return new class extends Migration
             
             $table->enum('status', ['ongoing', 'completed'])->default('ongoing');
             $table->text('notes')->nullable();
+            $table->unsignedTinyInteger('preferred_payment_day')->nullable();
+            $table->date('next_payment_date')->nullable()->index();
             $table->timestamps();
         });
     }

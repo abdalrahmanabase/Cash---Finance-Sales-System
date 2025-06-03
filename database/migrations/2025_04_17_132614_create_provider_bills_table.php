@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('provider_bills', function (Blueprint $table) {
             $table->id();
             $table->foreignId('provider_id')->constrained()->onDelete('cascade');
-            $table->string('image_path'); 
+            $table->string('image_path')->nullable();
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->decimal('amount_paid', 10, 2)->default(0);
             $table->text('notes')->nullable();

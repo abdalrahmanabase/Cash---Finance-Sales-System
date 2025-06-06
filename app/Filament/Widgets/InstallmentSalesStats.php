@@ -31,22 +31,11 @@ class InstallmentSalesStats extends BaseWidget
         $remainingThisMonth = 0;
 
         foreach ($filteredSales as $sale) {
-            $monthsCount    = max($sale->months_count, 1);
-            $monthlyCapital = $sale->total_cost / $monthsCount;
+            $actualDue = $sale->getPaymentScheduleProgress()['next_payment_due'];
 
-            $monthlyProfit = (
-                $sale->final_price - $sale->down_payment - $sale->total_cost + ($sale->interest_amount ?? 0)
-            ) / $monthsCount;
-
-            $monthlyPayment = $sale->monthly_installment;
-
-            if ($sale->remaining_months == 1 && $sale->remaining_amount > 0 && $sale->remaining_amount < $monthlyPayment) {
-                $monthlyPayment = $sale->remaining_amount;
-            }
-
-            $expectedPayment += $monthlyPayment;
-            $expectedProfit  += $monthlyProfit;
-            $expectedCapital += $monthlyCapital;
+            $expectedPayment += $actualDue;
+            $expectedProfit  += $sale->getProfitOnDueAmount();
+            $expectedCapital += $sale->getCapitalOnDueAmount();
 
             $grouped = $sale->getPaymentsGroupedByMonth();
 
@@ -67,8 +56,8 @@ class InstallmentSalesStats extends BaseWidget
                 $scheduledDate = $sale->getScheduledPaymentDateForMonth($selectedMonth);
                 if ($scheduledDate) {
                     $paidThisMonthAmount = $grouped[$selectedMonth]['amount'] ?? 0;
-                    if ($paidThisMonthAmount < $monthlyPayment) {
-                        $remainingThisMonth += max(0, $monthlyPayment - $paidThisMonthAmount);
+                    if ($paidThisMonthAmount < $actualDue) {
+                        $remainingThisMonth += max(0, $actualDue - $paidThisMonthAmount);
                     }
                 }
             }

@@ -125,14 +125,24 @@ class InstallmentSalesSummary extends Page implements HasTable
                 ->money('EGP')
                 ->sortable(),
 
-            TextColumn::make('profit')
-    ->label('Profit')
+            // Add this column to show "Due Amount"
+TextColumn::make('current_month_due')
+    ->label('Due Amount')
     ->getStateUsing(
         fn (Sale $record): string => number_format(
-            (
-                ($record->final_price - $record->down_payment - $record->total_cost + ($record->interest_amount ?? 0))
-                / max($record->months_count, 1)
-            ),
+            $record->getPaymentScheduleProgress()['next_payment_due'],
+            2
+        )
+    )
+    ->suffix(' EGP')
+    ->color('blue')
+    ->sortable(),
+
+TextColumn::make('profit')
+    ->label('Profit on Due Amount')
+    ->getStateUsing(
+        fn (Sale $record): string => number_format(
+            $record->getProfitOnDueAmount(),
             2
         )
     )
@@ -140,20 +150,24 @@ class InstallmentSalesSummary extends Page implements HasTable
     ->color('green')
     ->sortable(),
 
-            TextColumn::make('total_cost')
-                ->label('Capital')
-                ->getStateUsing(
-                    fn (Sale $record): string => number_format(
-                        ($record->total_cost / max($record->months_count, 1)),
-                        2
-                    )
-                )
-                ->suffix(' EGP')
-                ->color('gray')
-                ->sortable(),
+
+
+            TextColumn::make('capital_due')
+    ->label('Capital on Due Amount')
+    ->getStateUsing(
+        fn (Sale $record): string => number_format(
+            $record->getCapitalOnDueAmount(),
+            2
+        )
+    )
+    ->suffix(' EGP')
+    ->color('gray')
+    ->sortable(),
+
 
             TextColumn::make('next_payment_date')
                 ->label('Due Date')
+                ->date()
                 ->sortable(),
 
             TextColumn::make('status')

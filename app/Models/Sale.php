@@ -477,6 +477,22 @@ class Sale extends Model
         });
     }
 
+    public function getProfitOnDueAmount(): float
+{
+    $due = $this->getPaymentScheduleProgress()['next_payment_due'];
+
+    return ($due / max($this->final_price, 1)) * (
+        $this->final_price - $this->down_payment - $this->total_cost + ($this->interest_amount ?? 0)
+    );
+}
+
+public function getCapitalOnDueAmount(): float
+{
+    $due = $this->getPaymentScheduleProgress()['next_payment_due'];
+
+    return ($due / max($this->final_price, 1)) * $this->total_cost;
+}
+
     public function getLatestPaymentAttribute()
     {
         return $this->getLatestPayment();

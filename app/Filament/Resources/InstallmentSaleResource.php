@@ -267,6 +267,8 @@ class InstallmentSaleResource extends Resource
                         TextInput::make('monthly_installment')
                             ->label('Monthly Installment')
                             ->numeric()
+                            ->step(1)                    // ← only whole steps
+                            ->rules(['integer'])         // ← validate integer
                             ->prefix('EGP')
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Get $get, Set $set) => InstallmentSaleResource::updateInstallmentFromMonthly($get, $set))
@@ -501,21 +503,24 @@ class InstallmentSaleResource extends Resource
     }
 
     protected static function updateInstallmentCalculations(Get $get, Set $set): void
-    {
-        $finalPrice = floatval($get('final_price') ?? 0);
-        $down       = floatval($get('down_payment') ?? 0);
-        $remainPri  = max(0, $finalPrice - $down);
-        $irate      = floatval($get('interest_rate') ?? 0);
-        $months     = intval($get('months_count') ?? 1);
+{
+    $finalPrice = floatval($get('final_price') ?? 0);
+    $down       = floatval($get('down_payment') ?? 0);
+    $remainPri  = max(0, $finalPrice - $down);
+    $irate      = floatval($get('interest_rate') ?? 0);
+    $months     = max(1, intval($get('months_count') ?? 1));
 
-        $interestAmt = $remainPri * ($irate / 100);
-        $totalRem    = $remainPri + $interestAmt;
-        $monthlyInst = $months > 0 ? ($totalRem / $months) : 0;
+    $interestAmt = $remainPri * ($irate / 100);
+    $totalRem    = $remainPri + $interestAmt;
 
-        $set('interest_amount', $interestAmt);
-        $set('monthly_installment', $monthlyInst);
-        $set('remaining_amount', $totalRem);
-    }
+    // Round UP to the next integer:
+    $monthlyInst = (int) ceil($totalRem / $months);
+
+    $set('interest_amount', (int) round($interestAmt));
+    $set('monthly_installment', $monthlyInst);
+    $set('remaining_amount', (int) round($totalRem));
+}
+
 
     protected static function updateInstallmentFromMonthly(Get $get, Set $set): void
     {

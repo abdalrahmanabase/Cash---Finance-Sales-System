@@ -135,8 +135,7 @@ TextColumn::make('current_month_due')
         )
     )
     ->suffix(' EGP')
-    ->color('blue')
-    ->sortable(),
+    ->color('blue'),
 
 TextColumn::make('profit')
     ->label('Profit on Due Amount')
@@ -147,8 +146,7 @@ TextColumn::make('profit')
         )
     )
     ->suffix(' EGP')
-    ->color('green')
-    ->sortable(),
+    ->color('green'),
 
 
 
@@ -161,8 +159,7 @@ TextColumn::make('profit')
         )
     )
     ->suffix(' EGP')
-    ->color('gray')
-    ->sortable(),
+    ->color('gray'),
 
 
             TextColumn::make('next_payment_date')
@@ -178,8 +175,7 @@ TextColumn::make('profit')
                     $record->dynamic_status === 'danger'              => '❌ Overdue',
                     $record->dynamic_status === 'orange'              => '⚠️ Late',
                     default                                            => '🟢 On Track',
-                })
-                ->sortable(),
+                }),
         ];
     }
 

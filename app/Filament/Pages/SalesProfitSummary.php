@@ -51,48 +51,30 @@ class SalesProfitSummary extends Page implements HasTable
     }
 
     public function table(Table $table): Table
-    {
-        return $table
-            ->query($this->getTableQuery())
-            ->columns([
-                TextColumn::make('created_at')
-                    ->label('Date')
-                    ->date('d-m-Y')
-                    ->sortable(),
+{
+    return $table
+        ->query($this->getTableQuery())
+        ->columns([
+            TextColumn::make('created_at')
+                ->label('Date')
+                ->date('d-m-Y')
+                ->sortable(),
 
-                TextColumn::make('final_price')
-                    ->label('Sale Amount')
-                    ->money('EGP')
-                    ->sortable()
-                    // ->summarize([
-                    //     Tables\Columns\Summarizers\Sum::make()
-                    //         ->money('EGP')
-                    //         ->label('Total Sales')
-                    // ])
-                    ,
+            TextColumn::make('final_price')
+                ->label('Sale Amount')
+                ->money('EGP')
+                ->sortable(),
 
-                TextColumn::make('total_cost')
-                    ->label('Cost')
-                    ->money('EGP')
-                    ->sortable()
-                    // ->summarize([
-                    //     Tables\Columns\Summarizers\Sum::make()
-                    //         ->money('EGP')
-                    //         ->label('Total Cost')
-                    // ])
-                    ,
+            // show the raw cost
+            TextColumn::make('cost_raw')
+                ->label('Cost')
+                ->money('EGP'),
 
-                TextColumn::make('profit')
-                    ->label('Profit')
-                    ->money('EGP')
-                    ->color(fn($record) => $record->profit >= 0 ? 'success' : 'danger')
-                    ->sortable()
-                    // ->summarize([
-                    //     Tables\Columns\Summarizers\Sum::make()
-                    //         ->money('EGP')
-                    //         ->label('Total Profit'), // NO color here
-                    // ])
-                    ,
+            // show the raw profit
+            TextColumn::make('profit_raw')
+                ->label('Profit')
+                ->money('EGP')
+                ->color(fn($record) => $record->profit_raw >= 0 ? 'success' : 'danger'),
 
             ])
             ->filters([
@@ -156,22 +138,39 @@ class SalesProfitSummary extends Page implements HasTable
     }
 
     protected function getTableQuery(): Builder
-    {
-        return Sale::query()
-            ->where('sale_type', 'cash')
-            ->with(['items.product'])
-            ->selectRaw('
-                sales.*,
-                (SELECT SUM(sale_items.quantity * products.purchase_price) 
-                 FROM sale_items 
-                 JOIN products ON sale_items.product_id = products.id 
-                 WHERE sale_items.sale_id = sales.id) as total_cost,
-                (sales.final_price - (SELECT SUM(sale_items.quantity * products.purchase_price) 
-                 FROM sale_items 
-                 JOIN products ON sale_items.product_id = products.id 
-                 WHERE sale_items.sale_id = sales.id)) as profit
-            ');
-    }
+{
+    return Sale::query()
+        ->where('sale_type', 'cash')
+        ->with('items.product')
+        ->select('sales.*')
+
+        // alias the DB‐computed total cost under a new name:
+        ->selectRaw(<<<'SQL'
+            (
+              SELECT SUM(si.quantity * p.purchase_price)
+              FROM sale_items si
+              JOIN products p ON si.product_id = p.id
+              WHERE si.sale_id = sales.id
+            ) AS cost_raw
+        SQL
+        )
+
+        // alias the DB‐computed profit (final_price - cost) under a new name:
+        ->selectRaw(<<<'SQL'
+            (
+              sales.final_price
+              - (
+                  SELECT SUM(si.quantity * p.purchase_price)
+                  FROM sale_items si
+                  JOIN products p ON si.product_id = p.id
+                  WHERE si.sale_id = sales.id
+                )
+            ) AS profit_raw
+        SQL
+        );
+}
+
+
 
     protected function applyPresetTimeFilter(Builder $query, string $timeRange): void
     {

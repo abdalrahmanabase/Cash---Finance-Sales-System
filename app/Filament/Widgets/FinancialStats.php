@@ -172,6 +172,8 @@ class FinancialStats extends StatsOverviewWidget
 
     public function render(): \Illuminate\Contracts\View\View
     {
+
+        
         $this->getCards();
 
         return view('filament.widgets.financial-stats', [

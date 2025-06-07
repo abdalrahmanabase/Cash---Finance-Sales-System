@@ -74,8 +74,7 @@ class PaymentResource extends Resource
                             return 'Overdue';
                         }
                         return 'Upcoming';
-                    })
-                    ->sortable(),
+                    }),
             ])
             ->filters([
                 SelectFilter::make('due_month')

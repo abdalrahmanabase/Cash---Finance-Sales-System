@@ -17,6 +17,8 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+
+use App\Filament\Widgets\FinancialStats;
 use App\Filament\Widgets\SaleOptionsButton;
 use App\Filament\Widgets\ClientInstallmentPaymentWidget;
 use App\Filament\Widgets\CashSalesProfitChart;
@@ -31,6 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('')
             ->login()
+            ->favicon(asset('favicon-removebg-preview (1).png'))
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -43,10 +46,11 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
+                // Widgets\AccountWidget::class,
                 // Widgets\FilamentInfoWidget::class,
-                SaleOptionsButton::class, 
-                ClientInstallmentPaymentWidget::class,
+                // FinancialStats::class, 
+                // SaleOptionsButton::class, 
+                // ClientInstallmentPaymentWidget::class,
                 // MonthlySalesChart::class,
                 // CashSalesProfitChart::class,
             ])

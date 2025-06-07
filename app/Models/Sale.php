@@ -481,17 +481,52 @@ class Sale extends Model
 {
     $due = $this->getPaymentScheduleProgress()['next_payment_due'];
 
-    return ($due / max($this->final_price, 1)) * (
-        $this->final_price - $this->down_payment - $this->total_cost + ($this->interest_amount ?? 0)
-    );
+    $monthsCount = max($this->months_count, 1);
+
+    $remainingCapital = max(0, $this->total_cost - $this->down_payment);
+    $monthlyCapital   = $remainingCapital / $monthsCount;
+
+    $totalProfit = ($this->final_price + ($this->interest_amount ?? 0)) - $this->total_cost;
+    $monthlyProfit = $totalProfit / $monthsCount;
+
+    $monthlyTotal = $monthlyCapital + $monthlyProfit;
+
+    if ($monthlyTotal <= 0) {
+        return 0;
+    }
+
+    $portion = $due / $monthlyTotal;
+
+    $profitDue = $monthlyProfit * $portion;
+
+    return round($profitDue, 2);
 }
 
 public function getCapitalOnDueAmount(): float
 {
     $due = $this->getPaymentScheduleProgress()['next_payment_due'];
 
-    return ($due / max($this->final_price, 1)) * $this->total_cost;
+    $monthsCount = max($this->months_count, 1);
+
+    $remainingCapital = max(0, $this->total_cost - $this->down_payment);
+    $monthlyCapital   = $remainingCapital / $monthsCount;
+
+    $totalProfit = ($this->final_price + ($this->interest_amount ?? 0)) - $this->total_cost;
+    $monthlyProfit = $totalProfit / $monthsCount;
+
+    $monthlyTotal = $monthlyCapital + $monthlyProfit;
+
+    if ($monthlyTotal <= 0) {
+        return 0;
+    }
+
+    $portion = $due / $monthlyTotal;
+
+    $capitalDue = $monthlyCapital * $portion;
+
+    return round($capitalDue, 2);
 }
+
 
     public function getLatestPaymentAttribute()
     {

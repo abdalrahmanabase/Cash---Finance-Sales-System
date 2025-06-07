@@ -18,6 +18,7 @@ return new class extends Migration
             $table->date('date');
             // optional notes/details
             $table->text('description')->nullable();
+            $table->index('date'); 
             $table->timestamps();
         });
     }

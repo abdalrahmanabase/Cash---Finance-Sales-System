@@ -22,71 +22,65 @@ class FinancialStats extends StatsOverviewWidget
         if ($periodKey === 'all_time') {
             $label       = 'All Time';
             $filterFn    = fn($d) => true;
-            $periodStart = null;
-            $periodEnd   = null;
         } elseif ($periodKey === 'this_year') {
-            $label       = $now->year;
-            $filterFn    = fn($d) => Carbon::parse($d)->year === $now->year;
-            $periodStart = Carbon::create($now->year, 1, 1)->startOfDay();
-            $periodEnd   = Carbon::create($now->year, 12, 31)->endOfDay();
+            $label    = $now->year;
+            $filterFn = fn($d) => Carbon::parse($d)->year === $now->year;
         } elseif (preg_match('/^(\d{4})-(\d{2})$/', $periodKey, $m)) {
-            $year        = (int)$m[1];
-            $month       = (int)$m[2];
-            $label       = Carbon::create($year, $month)->format('F Y');
-            $filterFn    = fn ($d) => (Carbon::parse($d)->year === $year && Carbon::parse($d)->month === $month);
-            $periodStart = Carbon::create($year, $month, 1)->startOfDay();
-            $periodEnd   = Carbon::create($year, $month, 1)->endOfMonth()->endOfDay();
+            $year     = (int)$m[1];
+            $month    = (int)$m[2];
+            $label    = Carbon::create($year, $month)->format('F Y');
+            $filterFn = fn($d) => (
+                Carbon::parse($d)->year === $year
+             && Carbon::parse($d)->month === $month
+            );
         } else {
-            $label       = 'All Time';
-            $filterFn    = fn($d) => true;
-            $periodStart = null;
-            $periodEnd   = null;
+            $label    = 'All Time';
+            $filterFn = fn($d) => true;
         }
         $this->periodLabel = $label;
 
-        $allSales = Sale::with(['items.product', 'client'])->get();
-
-        $totalRevenue = 0;
-        $totalCapital = 0;
-        $totalProfit  = 0;
-        $rows = [];
+        // ── Sales calculations (unchanged) ──────────────────────────────────
+        $allSales      = Sale::with(['items.product', 'client'])->get();
+        $totalRevenue  = 0;
+        $totalCapital  = 0;
+        $totalProfit   = 0;
+        $rows          = [];
 
         foreach ($allSales as $sale) {
-            $purchaseCost = (float) $sale->items->sum(fn($item) => ($item->quantity ?? 0) * ($item->product->purchase_price ?? 0));
+            $purchaseCost = (float) $sale->items->sum(fn($item) =>
+                ($item->quantity ?? 0) * ($item->product->purchase_price ?? 0)
+            );
             $finalPrice   = (float) $sale->final_price;
             $interest     = (float) ($sale->interest_amount ?? 0);
             $downPayment  = (float) ($sale->down_payment ?? 0);
             $months       = (int) ($sale->months_count ?? 1);
 
-            // CASH SALES: Recognize immediately if in period
-            if ($sale->sale_type === 'cash') {
-                if ($filterFn($sale->created_at)) {
-                    $capital = $purchaseCost;
-                    $profit = ($finalPrice + $interest) - $purchaseCost;
-                    $revenue = $finalPrice;
+            // Cash sale
+            if ($sale->sale_type === 'cash' && $filterFn($sale->created_at)) {
+                $capital = $purchaseCost;
+                $profit  = ($finalPrice + $interest) - $purchaseCost;
+                $revenue = $finalPrice;
 
-                    $rows[] = [
-                        'sale_id'         => $sale->id,
-                        'client'          => optional($sale->client)->name ?? '—',
-                        'date'            => $sale->created_at->format('Y-m-d'),
-                        'type'            => 'Cash',
-                        'amount_paid'     => $finalPrice,
-                        'capital'         => (int) round($capital),
-                        'profit'          => (int) round($profit),
-                    ];
-                    $totalCapital += $capital;
-                    $totalProfit += $profit;
-                    $totalRevenue += $revenue;
-                }
+                $rows[] = [
+                    'sale_id'     => $sale->id,
+                    'client'      => optional($sale->client)->name ?? '—',
+                    'date'        => $sale->created_at->format('Y-m-d'),
+                    'type'        => 'Cash',
+                    'amount_paid' => $finalPrice,
+                    'capital'     => (int) round($capital),
+                    'profit'      => (int) round($profit),
+                ];
+                $totalCapital += $capital;
+                $totalProfit  += $profit;
+                $totalRevenue += $revenue;
             }
 
-            // INSTALLMENT SALES: Recognize down payment, and then split each payment
+            // Installment sale
             if ($sale->sale_type === 'installment') {
-                // 1. Down payment (always capital)
+                // 1) Down payment
                 if ($downPayment > 0) {
                     $downDate = $sale->created_at->format('Y-m-d');
-                    $inPeriod = $filterFn($downDate);
-                    if ($inPeriod) {
+                    if ($filterFn($downDate)) {
                         $rows[] = [
                             'sale_id'     => $sale->id,
                             'client'      => optional($sale->client)->name ?? '—',
@@ -101,35 +95,29 @@ class FinancialStats extends StatsOverviewWidget
                     }
                 }
 
-                // 2. The rest of the capital (after down payment)
-                $remainingCapital = max(0, $purchaseCost - $downPayment);
-                $totalProfitOnSale = ($finalPrice + $interest) - $purchaseCost;
-                $monthlyCapital = $months > 0 ? $remainingCapital / $months : 0;
-                $monthlyProfit = $months > 0 ? $totalProfitOnSale / $months : 0;
+                // 2) Remaining installments
+                $remainingCapital   = max(0, $purchaseCost - $downPayment);
+                $totalProfitOnSale  = ($finalPrice + $interest) - $purchaseCost;
+                $monthlyCapital     = $months > 0 ? $remainingCapital / $months : 0;
+                $monthlyProfit      = $months > 0 ? $totalProfitOnSale / $months  : 0;
 
-                // 3. Go through each actual payment, split proportionally
                 $dates   = $sale->payment_dates   ?? [];
                 $amounts = $sale->payment_amounts ?? [];
                 foreach ($dates as $i => $d) {
                     $amt = (float) ($amounts[$i] ?? 0);
                     if ($amt <= 0) continue;
-                    $payDate = Carbon::parse($d);
-                    $inPeriod = $filterFn($d);
-                    if ($inPeriod) {
-                        // Split by portion of full month
-                        $capitalPart = 0;
-                        $profitPart = 0;
 
-                        if ($monthlyCapital + $monthlyProfit > 0) {
-                            $portion = $amt / ($monthlyCapital + $monthlyProfit);
-                            $capitalPart = $monthlyCapital * $portion;
-                            $profitPart  = $monthlyProfit  * $portion;
-                        }
+                    if ($filterFn($d)) {
+                        $portion     = $monthlyCapital + $monthlyProfit > 0
+                                     ? $amt / ($monthlyCapital + $monthlyProfit)
+                                     : 0;
+                        $capitalPart = $monthlyCapital * $portion;
+                        $profitPart  = $monthlyProfit  * $portion;
 
                         $rows[] = [
                             'sale_id'     => $sale->id,
                             'client'      => optional($sale->client)->name ?? '—',
-                            'date'        => $payDate->format('Y-m-d'),
+                            'date'        => Carbon::parse($d)->format('Y-m-d'),
                             'type'        => 'Installment',
                             'amount_paid' => (int) round($amt),
                             'capital'     => (int) round($capitalPart),
@@ -143,27 +131,40 @@ class FinancialStats extends StatsOverviewWidget
             }
         }
 
-        // Expenses
+        // ── Expenses calculations ───────────────────────────────────────────
+        // all expenses in period
         $expensesInPeriod = Expense::all()->filter(fn($e) => $filterFn($e->date));
+        // total of all types
         $totalExpenses    = (int) round($expensesInPeriod->sum('amount'));
-        $netProfit = (int) round($totalProfit - $totalExpenses);
+        // only those marked “Paid For Owner”
+        $ownerPaidExpenses = (int) round(
+            $expensesInPeriod
+                ->where('type', 'Paid For Owner')
+                ->sum('amount')
+        );
 
+        $netProfit = (int) round($totalProfit - $totalExpenses);
         $this->explainRows = $rows;
 
         return [
-            Card::make('Revenue', number_format($totalRevenue, 0) . ' EGP')
-                ->description("All cash and actually paid installments for {$label}")
+            Card::make('Revenue',     number_format($totalRevenue, 0) . ' EGP')
+                ->description("All cash & paid installments for {$label}")
                 ->color('success'),
-            Card::make('Capital', number_format($totalCapital, 0) . ' EGP')
+
+            Card::make('Capital',     number_format($totalCapital, 0) . ' EGP')
                 ->description("Capital portion of payments for {$label}")
                 ->color('danger'),
-            Card::make('Profit', number_format($totalProfit, 0) . ' EGP')
+
+            Card::make('Profit',      number_format($totalProfit, 0) . ' EGP')
                 ->description("Profit portion of paid amounts for {$label}")
                 ->color('primary'),
-            Card::make('Expenses', number_format($totalExpenses, 0) . ' EGP')
-                ->description("Expenses for {$label}")
+
+            Card::make('Expenses',    number_format($totalExpenses, 0) . ' EGP')
+                ->description("Total expenses for {$label}. Paid For Owner: "
+                    . number_format($ownerPaidExpenses, 0) . ' EGP')
                 ->color('warning'),
-            Card::make('Net Profit', number_format($netProfit, 0) . ' EGP')
+
+            Card::make('Net Profit',  number_format($netProfit, 0) . ' EGP')
                 ->description("Profit − Expenses for {$label}")
                 ->color('success'),
         ];

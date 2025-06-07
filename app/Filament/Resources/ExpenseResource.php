@@ -10,6 +10,9 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
 
 class ExpenseResource extends Resource
 {
@@ -23,55 +26,42 @@ class ExpenseResource extends Resource
     {
         return $form
             ->schema([
-                //
                 // 1) SELECT FOR PREDEFINED TYPES + “Other”
-                //
                 Forms\Components\Select::make('type')
                     ->label('Type')
                     ->options([
-                        'Rent'   => 'Rent',
-                        'Salary' => 'Salary',
-                        'Bills'  => 'Bills',
-                        'Other'  => 'Other',
+                        'Paid For Owner' => 'Paid For Owner',
+                        'Rent'           => 'Rent',
+                        'Salary'         => 'Salary',
+                        'Bills'          => 'Bills',
+                        'Other'          => 'Other',
                     ])
                     ->required()
-                    ->reactive() // so that dependent fields update instantly
-
-                    // If you want the user to be able to search through these options
+                    ->reactive()
                     ->searchable(),
 
-                //
                 // 2) CONDITIONAL TEXT INPUT FOR “Other”
-                //
                 Forms\Components\TextInput::make('type_manual')
                     ->label('Specify Other Type')
                     ->maxLength(255)
-                    // Only show this field if the Select above is “Other”
                     ->hidden(fn (callable $get) => $get('type') !== 'Other')
-                    // Only store this if “Other” was chosen—otherwise leave it null
                     ->dehydrated(fn ($state, $get) => $get('type') === 'Other')
                     ->required(fn (callable $get) => $get('type') === 'Other'),
 
-                //
                 // 3) AMOUNT AS BEFORE
-                //
                 Forms\Components\TextInput::make('amount')
                     ->label('Amount (EGP)')
                     ->required()
                     ->numeric()
                     ->minValue(0),
 
-                //
                 // 4) DATEPICKER, DEFAULT TO TODAY
-                //
                 Forms\Components\DatePicker::make('date')
                     ->label('Expense Date')
                     ->default(Carbon::today())
                     ->required(),
 
-                //
                 // 5) DESCRIPTION AS BEFORE
-                //
                 Forms\Components\Textarea::make('description')
                     ->label('Description')
                     ->rows(3),
@@ -98,16 +88,81 @@ class ExpenseResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\Filter::make('this_month')
-                    ->label('This Month')
-                    ->query(fn ($query) => $query
-                        ->whereYear('date', now()->year)
-                        ->whereMonth('date', now()->month)),
+                // 1) Filter by Type
+                SelectFilter::make('type')
+                    ->label('Type')
+                    ->options([
+                        'Paid For Owner' => 'Paid For Owner',
+                        'Rent'           => 'Rent',
+                        'Salary'         => 'Salary',
+                        'Bills'          => 'Bills',
+                        'Other'          => 'Other',
+                    ]),
 
-                Tables\Filters\Filter::make('this_year')
-                    ->label('This Year')
-                    ->query(fn ($query) => $query
-                        ->whereYear('date', now()->year)),
+                // 2) Period filter (months, last-3/6, this/last year)
+                Filter::make('period')
+                    ->label('Date Range')
+                    ->form([
+                        Forms\Components\Select::make('period')
+                            ->label('Period')
+                            ->options([
+                                '1'         => 'January',
+                                '2'         => 'February',
+                                '3'         => 'March',
+                                '4'         => 'April',
+                                '5'         => 'May',
+                                '6'         => 'June',
+                                '7'         => 'July',
+                                '8'         => 'August',
+                                '9'         => 'September',
+                                '10'        => 'October',
+                                '11'        => 'November',
+                                '12'        => 'December',
+                                'last_3'    => 'Last 3 Months',
+                                'last_6'    => 'Last 6 Months',
+                                'this_year' => 'This Year',
+                                'last_year' => 'Last Year',
+                            ])
+                            ->placeholder('All Periods'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $period = $data['period'] ?? null;
+
+                        // 1) Nothing selected → unfiltered
+                        if (! $period) {
+                            return $query;
+                        }
+
+                        $now = Carbon::now();
+
+                        // 2) Numeric month (1–12) → that month of current year
+                        if (ctype_digit($period)) {
+                            return $query
+                                ->whereYear('date', $now->year)
+                                ->whereMonth('date', (int) $period);
+                        }
+
+                        // 3) Last N months
+                        if ($period === 'last_3') {
+                            $start = $now->copy()->subMonths(3)->startOfMonth();
+                            return $query->whereBetween('date', [$start, $now]);
+                        }
+                        if ($period === 'last_6') {
+                            $start = $now->copy()->subMonths(6)->startOfMonth();
+                            return $query->whereBetween('date', [$start, $now]);
+                        }
+
+                        // 4) Yearly presets
+                        if ($period === 'this_year') {
+                            return $query->whereYear('date', $now->year);
+                        }
+                        if ($period === 'last_year') {
+                            return $query->whereYear('date', $now->copy()->subYear()->year);
+                        }
+
+                        // 5) Fallback → unfiltered
+                        return $query;
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

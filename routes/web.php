@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use App\Filament\Pages\ClientInstallmentPayments;
 
 
-Route::view('/', 'welcome');
 
 Route::get(
     '/client-installment-payments/{client_id?}',

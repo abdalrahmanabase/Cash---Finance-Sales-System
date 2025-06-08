@@ -8,10 +8,13 @@ use Filament\Widgets\ChartWidget;
 
 class CashSalesProfitChart extends ChartWidget
 {
-    protected static ?string $heading = 'Sales Profit Trend';
+    protected static ?string $heading = 'null';
     protected static ?string $maxHeight = '300px';
     protected static ?string $pollingInterval = null;
-
+ public function getHeading(): string
+    {
+        return __('Sales Profit Trend');
+    }
     // Always default filter — no session persistence or external modification
     public ?string $filter = 'this_month';
 
@@ -23,11 +26,11 @@ class CashSalesProfitChart extends ChartWidget
     protected function getFilters(): ?array
     {
         return [
-            'today' => 'Today',
-            'this_week' => 'This Week',
-            'this_month' => 'This Month',
-            'last_month' => 'Last Month',
-            'this_year' => 'This Year',
+            'today' => __('Today'),
+            'this_week' => __('This Week'),
+            'this_month' => __('This Month'),
+            'last_month' => __('Last Month'),
+            'this_year' => __('This Year'),
         ];
     }
 
@@ -105,7 +108,7 @@ class CashSalesProfitChart extends ChartWidget
             'labels' => array_keys($data),
             'datasets' => [
                 [
-                    'label' => 'Profit (EGP)',
+                    'label' => __('Profit (EGP)'),
                     'data' => array_values($data),
                     'borderColor' => '#10B981',
                     'backgroundColor' => 'rgba(16, 185, 129, 0.2)',

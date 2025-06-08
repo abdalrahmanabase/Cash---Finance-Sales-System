@@ -8,7 +8,12 @@ use Illuminate\Support\Carbon;
 
 class WeeklySalesChart extends ChartWidget
 {
-    protected static ?string $heading = 'Weekly Sales';
+    protected static ?string $heading = null;
+
+    public function getHeading(): string
+    {
+        return __('Weekly Sales');
+    }
     protected static ?string $maxHeight = '300px';
 
     protected function getData(): array
@@ -27,7 +32,7 @@ class WeeklySalesChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Sales',
+                    'label' => __('Sales'),
                     'data' => $data->toArray(),
                 ],
             ],

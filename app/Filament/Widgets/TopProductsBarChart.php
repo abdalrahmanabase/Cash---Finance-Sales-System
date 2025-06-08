@@ -7,7 +7,12 @@ use App\Models\Product;
 
 class TopProductsBarChart extends ChartWidget
 {
-    protected static ?string $heading = 'Top 5 Products by Stock';
+    protected static ?string $heading = null;
+
+    public function getHeading(): string
+    {
+        return __('Top 5 Products by Stock');
+    }
 
     protected function getData(): array
     {
@@ -16,7 +21,7 @@ class TopProductsBarChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Stock',
+                    'label' => __('Stock'),
                     'data' => $products->pluck('stock'),
                     'backgroundColor' => '#3b82f6',
                 ],

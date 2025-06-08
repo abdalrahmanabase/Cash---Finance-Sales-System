@@ -80,23 +80,24 @@ class InstallmentSalesStats extends BaseWidget
             return !$isAll && $due->format('Y-m') < $selectedMonth;
         })->sum('remaining_amount');
 
-        return [
-            Stat::make('Expected Payment', number_format($expectedPayment, 2) . ' EGP')
-                ->description('Expected profit: ' . number_format($expectedProfit, 2) . ' EGP | Capital: ' . number_format($expectedCapital, 2) . ' EGP')
+         return [
+            Stat::make(__('Expected Payment'), number_format($expectedPayment, 2) . ' EGP')
+                ->description(__('Expected profit: :profit EGP | Capital: :capital EGP', ['profit' => number_format($expectedProfit, 2), 'capital' => number_format($expectedCapital, 2)]))
                 ->color('primary'),
 
-            Stat::make('Paid', number_format($paidThisMonth, 2) . ' EGP')
-                ->description('Profit: ' . number_format($paidProfit, 2) . ' EGP | Capital: ' . number_format($paidCapital, 2) . ' EGP')
+            Stat::make(__('Paid'), number_format($paidThisMonth, 2) . ' EGP')
+                ->description(__('Profit: :profit EGP | Capital: :capital EGP', ['profit' => number_format($paidProfit, 2), 'capital' => number_format($paidCapital, 2)]))
                 ->color('success'),
 
-            Stat::make('Remaining This Month', number_format($remainingThisMonth, 2) . ' EGP')
-                ->description('Still due for selected period')
+            Stat::make(__('Remaining This Month'), number_format($remainingThisMonth, 2) . ' EGP')
+                ->description(__('Still due for selected period'))
                 ->color('warning'),
 
-            Stat::make('Previous Months Unpaid', number_format($remainingFromPrevious, 2) . ' EGP')
-                ->description('Unpaid from earlier months')
+            Stat::make(__('Previous Months Unpaid'), number_format($remainingFromPrevious, 2) . ' EGP')
+                ->description(__('Unpaid from earlier months'))
                 ->color('danger'),
         ];
+    
     }
 
     protected function getFilteredSales(): Collection

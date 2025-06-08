@@ -17,7 +17,7 @@ class MonthlySalesChart extends BaseWidget
 
 return [
     $this->buildStat(
-        'This Month Profit',
+        __('This Month Profit'),
         $now->copy()->startOfMonth(),
         $now->copy()->endOfMonth(),
         $now->copy()->subMonth()->startOfMonth(),
@@ -25,7 +25,7 @@ return [
         'month'
     ),
     $this->buildStat(
-        'This Week Profit',
+        __('This Week Profit'),
         $now->copy()->startOfWeek(Carbon::SATURDAY),
         $now->copy()->endOfWeek(Carbon::FRIDAY),
         $now->copy()->subWeek()->startOfWeek(Carbon::SATURDAY),
@@ -33,7 +33,7 @@ return [
         'week'
     ),
     $this->buildStat(
-        'This Year Profit',
+        __('This Year Profit'),
         $now->copy()->startOfYear(),
         $now->copy()->endOfYear(),
         $now->copy()->subYear()->startOfYear(),
@@ -80,11 +80,11 @@ return [
             }, 0);
     }
 
-    protected function getChangeDescription(float $change): string
+     protected function getChangeDescription(float $change): string
     {
         return $change >= 0
-            ? 'Increased by ' . number_format(abs($change), 2) . '%'
-            : 'Decreased by ' . number_format(abs($change), 2) . '%';
+            ? __('Increased by :change%', ['change' => number_format(abs($change), 2)])
+            : __('Decreased by :change%', ['change' => number_format(abs($change), 2)]);
     }
 
     protected function getChartData(Carbon $start, Carbon $end, string $period): array
@@ -127,7 +127,7 @@ return [
         'labels' => array_values($labels),
         'datasets' => [
             [
-                'label' => 'Profit',
+                'label' => __('Profit'),
                 'data' => array_values($data),
             ],
         ],

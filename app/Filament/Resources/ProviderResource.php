@@ -130,3 +130,4 @@ public static function table(Table $table): Table
         ];
     }
 }
+

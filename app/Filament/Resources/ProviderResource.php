@@ -83,7 +83,7 @@ public static function table(Table $table): Table
             
             // Add Payment Action
             Tables\Actions\Action::make('addPayment')
-                ->label('Add Payment')
+                ->label(__('Add Payment'))
                 ->icon('heroicon-o-currency-dollar')
                 ->color('success')
                 ->form([
@@ -130,3 +130,4 @@ public static function table(Table $table): Table
         ];
     }
 }
+

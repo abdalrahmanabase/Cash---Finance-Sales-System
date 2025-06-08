@@ -81,19 +81,19 @@ class InstallmentSalesStats extends BaseWidget
         })->sum('remaining_amount');
 
          return [
-            Stat::make(__('Expected Payment'), number_format($expectedPayment, 2) . ' EGP')
-                ->description(__('Expected profit: :profit EGP | Capital: :capital EGP', ['profit' => number_format($expectedProfit, 2), 'capital' => number_format($expectedCapital, 2)]))
+            Stat::make(__('Expected Payment'), number_format($expectedPayment, 2) . ' ' . __('Currency'))
+                ->description(__('Expected profit: :profit :currency | Capital: :capital :currency', ['profit' => number_format($expectedProfit, 2), 'capital' => number_format($expectedCapital, 2), 'currency' => __('Currency')]))
                 ->color('primary'),
 
-            Stat::make(__('Paid'), number_format($paidThisMonth, 2) . ' EGP')
-                ->description(__('Profit: :profit EGP | Capital: :capital EGP', ['profit' => number_format($paidProfit, 2), 'capital' => number_format($paidCapital, 2)]))
+            Stat::make(__('Paid'), number_format($paidThisMonth, 2) . ' ' . __('Currency'))
+                ->description(__('Profit: :profit :currency | Capital: :capital :currency', ['profit' => number_format($paidProfit, 2), 'capital' => number_format($paidCapital, 2), 'currency' => __('Currency')]))
                 ->color('success'),
 
-            Stat::make(__('Remaining This Month'), number_format($remainingThisMonth, 2) . ' EGP')
+            Stat::make(__('Remaining This Month'), number_format($remainingThisMonth, 2) . ' ' . __('Currency'))
                 ->description(__('Still due for selected period'))
                 ->color('warning'),
 
-            Stat::make(__('Previous Months Unpaid'), number_format($remainingFromPrevious, 2) . ' EGP')
+            Stat::make(__('Previous Months Unpaid'), number_format($remainingFromPrevious, 2) . ' ' . __('Currency'))
                 ->description(__('Unpaid from earlier months'))
                 ->color('danger'),
         ];

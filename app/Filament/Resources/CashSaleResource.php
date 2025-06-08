@@ -113,7 +113,7 @@ class CashSaleResource extends Resource
 
                 TextInput::make('unit_price')
                     ->numeric()
-                    ->prefix('EGP')
+                    ->prefix(__('Currency'))
                     ->disabled()
                     ->dehydrated(),
 
@@ -126,7 +126,7 @@ class CashSaleResource extends Resource
                 TextInput::make('total')
                     ->label('Item Total')
                     ->numeric()
-                    ->prefix('EGP')
+                    ->prefix(__('Currency'))
                     ->disabled()
                     ->dehydrated(),
             ])
@@ -149,7 +149,7 @@ class CashSaleResource extends Resource
             Select::make('discount_type')
                 ->label('Discount Type')
                 ->options([
-                    'fixed' => 'Fixed (EGP)',
+                    'fixed' => 'Fixed (' . __('Currency') . ')',
                     'percent' => 'Percent (%)',
                 ])
                 ->default('fixed')
@@ -195,7 +195,7 @@ class CashSaleResource extends Resource
             TextInput::make('final_price')
                 ->label('Final Price')
                 ->numeric()
-                ->prefix('EGP')
+                ->prefix(__('Currency'))
                 ->disabled()
                 ->dehydrated()
                 ->afterStateHydrated(function (Set $set, $state) {

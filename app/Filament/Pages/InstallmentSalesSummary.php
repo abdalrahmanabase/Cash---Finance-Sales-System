@@ -142,7 +142,7 @@ TextColumn::make('current_month_due')
             2
         )
     )
-    ->suffix(' EGP')
+    ->suffix(' ' . __('Currency'))
     ->color('blue'),
 
 TextColumn::make('profit')
@@ -153,7 +153,7 @@ TextColumn::make('profit')
             2
         )
     )
-    ->suffix(' EGP')
+    ->suffix(' ' . __('Currency'))
     ->color('green'),
 
 
@@ -166,7 +166,7 @@ TextColumn::make('profit')
             2
         )
     )
-    ->suffix(' EGP')
+    ->suffix(' ' . __('Currency'))
     ->color('gray'),
 
 

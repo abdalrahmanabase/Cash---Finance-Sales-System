@@ -123,7 +123,7 @@ class InstallmentSaleResource extends Resource
                                 TextInput::make('unit_price')
                                     ->label('Unit Price')
                                     ->numeric()
-                                    ->prefix('EGP')
+                                    ->prefix(__('Currency'))
                                     ->disabled()
                                     ->dehydrated(),
 
@@ -136,7 +136,7 @@ class InstallmentSaleResource extends Resource
                                 TextInput::make('total')
                                     ->label('Item Total')
                                     ->numeric()
-                                    ->prefix('EGP')
+                                    ->prefix(__('Currency'))
                                     ->disabled()
                                     ->dehydrated()
                                     ->afterStateHydrated(function (Set $set, Get $get) {
@@ -161,7 +161,7 @@ class InstallmentSaleResource extends Resource
                         Select::make('discount_type')
                             ->label('Discount Type')
                             ->options([
-                                'fixed'   => 'Fixed (EGP)',
+                                'fixed'   => 'Fixed (' . __('Currency') . ')',
                                 'percent' => 'Percent (%)',
                             ])
                             ->default('fixed')
@@ -207,7 +207,7 @@ class InstallmentSaleResource extends Resource
                         TextInput::make('final_price')
                             ->label('Final Price')
                             ->numeric()
-                            ->prefix('EGP')
+                            ->prefix(__('Currency'))
                             ->disabled()
                             ->dehydrated(),
 
@@ -260,7 +260,7 @@ class InstallmentSaleResource extends Resource
                         TextInput::make('interest_amount')
                             ->label('Interest Amount')
                             ->numeric()
-                            ->prefix('EGP')
+                            ->prefix(__('Currency'))
                             ->disabled()
                             ->dehydrated(),
 
@@ -279,7 +279,7 @@ class InstallmentSaleResource extends Resource
                             ->numeric()
                             ->step(1)                    // ← only whole steps
                             ->rules(['integer'])         // ← validate integer
-                            ->prefix('EGP')
+                            ->prefix(__('Currency'))
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Get $get, Set $set) => InstallmentSaleResource::updateInstallmentFromMonthly($get, $set))
                             ->required(),
@@ -311,22 +311,22 @@ class InstallmentSaleResource extends Resource
                                 Placeholder::make('paid_amount')
                                     ->label('Paid Amount')
                                     ->content(fn ($record) => $record?->paid_amount
-                                        ? 'EGP ' . number_format($record->paid_amount, 2)
-                                        : 'EGP 0.00'
+                                        ? __('Currency') . ' ' . number_format($record->paid_amount, 2)
+                                        : __('Currency') . ' 0.00'
                                     ),
 
                                 Placeholder::make('remaining_amount')
                                     ->label('Remaining Amount')
                                     ->content(fn ($record) => $record?->remaining_amount
-                                        ? 'EGP ' . number_format($record->remaining_amount, 2)
-                                        : 'EGP 0.00'
+                                        ? __('Currency') . ' ' . number_format($record->remaining_amount, 2)
+                                        : __('Currency') . ' 0.00'
                                     ),
 
                                 Placeholder::make('down_payment')
                                     ->label('Down Payment')
                                     ->content(fn ($record) => $record?->down_payment
-                                        ? 'EGP ' . number_format($record->down_payment, 2)
-                                        : 'EGP 0.00'
+                                        ? __('Currency') . ' ' . number_format($record->down_payment, 2)
+                                        : __('Currency') . ' 0.00'
                                     ),
 
                                 Placeholder::make('months_progress')
@@ -356,7 +356,7 @@ class InstallmentSaleResource extends Resource
                                             $d    = Carbon::parse($p['date'])->format('d-m-Y');
                                             $amt  = number_format($p['amount'], 2);
                                             $html .= "<span>{$d}</span>";
-                                            $html .= "<span class=\"font-medium\">EGP {$amt}</span>";
+                                            $html .= "<span class=\"font-medium\">" . __('Currency') . " {$amt}</span>";
                                             $html .= '</div>';
                                         }
                                         $html .= '</div>';

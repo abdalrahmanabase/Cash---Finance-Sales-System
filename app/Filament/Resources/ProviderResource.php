@@ -91,7 +91,7 @@ public static function table(Table $table): Table
                         ->numeric()
                         ->required()
                         ->step(0)
-                        ->label('Amount (EGP)'),
+                ->label('Amount (' . __('Currency') . ')'),
                         
                     Forms\Components\Textarea::make('notes')
                         ->label('Notes')

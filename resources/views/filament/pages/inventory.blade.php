@@ -13,7 +13,7 @@
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col items-center">
                 <span class="text-gray-500 dark:text-gray-300">{{ __('Inventory Value') }}</span>
-                <span class="text-2xl font-bold text-green-600 dark:text-green-400">EGP {{ number_format($totalValue,0) }}</span>
+                <span class="text-2xl font-bold text-green-600 dark:text-green-400">{{ __('Currency') }} {{ number_format($totalValue,0) }}</span>
             </div>
         </div>
     </div>
@@ -138,9 +138,9 @@
                     <tr class="border-b dark:border-gray-700">
                         <td class="px-4 py-2 dark:text-gray-100">${product.name}</td>
                         <td class="px-4 py-2 dark:text-gray-100">${category}</td>
-                        <td class="px-4 py-2 dark:text-gray-100">${Number(product.stock).toLocaleString()}</td>
-                        <td class="px-4 py-2 dark:text-gray-100">EGP ${Number(product.purchase_price).toLocaleString()}</td>
-                        <td class="px-4 py-2 dark:text-gray-100">EGP ${(product.stock * product.purchase_price).toLocaleString()}</td>
+                        <td class="px-4 py-2 dark:text-gray-100">${Number(product.stock).toLocaleString('en-US')}</td>
+                        <td class="px-4 py-2 dark:text-gray-100">{{ __('Currency') }} ${Number(product.purchase_price).toLocaleString('en-US')}</td>
+                        <td class="px-4 py-2 dark:text-gray-100">{{ __('Currency') }} ${(product.stock * product.purchase_price).toLocaleString('en-US')}</td>
                     </tr>
                 `;
             });

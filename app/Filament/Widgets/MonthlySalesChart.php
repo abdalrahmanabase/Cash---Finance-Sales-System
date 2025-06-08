@@ -59,7 +59,7 @@ return [
             ? (($currentProfit - $previousProfit) / $previousProfit) * 100 
             : ($currentProfit != 0 ? 100 : 0);
 
-        return Stat::make($label, number_format($currentProfit, 2) . ' EGP')
+        return Stat::make($label, number_format($currentProfit, 2) . ' ' . __('Currency'))
             ->description($this->getChangeDescription($change))
             ->descriptionIcon($change >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
             ->color($change >= 0 ? 'success' : 'danger')

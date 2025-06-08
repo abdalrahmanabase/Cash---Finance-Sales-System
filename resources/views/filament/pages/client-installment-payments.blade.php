@@ -5,7 +5,7 @@
     @endpush
     <div class="p-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <form method="GET" class="flex items-center gap-3">
-            <label for="client_filter" class="text-sm font-medium text-gray-700 dark:text-white">Filter by Client:</label>
+            <label for="client_filter" class="text-sm font-medium text-gray-700 dark:text-white">{{ __('Filter by Client:') }}</label>
             <select
                 id="client_filter"
                 name="client"
@@ -13,7 +13,7 @@
                 class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm
                        focus:border-primary-600 focus:ring focus:ring-primary-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-primary-700 transition"
             >
-                <option value="">All</option>
+                <option value="">{{ __('All') }}</option>
                 @foreach(\App\Models\Client::orderBy('name')->get() as $client)
                     <option value="{{ $client->id }}" @if(request('client') == $client->id) selected @endif>
                         {{ $client->name }}
@@ -24,15 +24,15 @@
     </div>
 
      <div class="table-container">
-        <h4 class="table-title">All Payments</h4>
+        <h4 class="table-title">{{ __('All Payments') }}</h4>
         <div class="table-wrapper">
             <table class="table">
                 <thead class="table-header">
                     <tr>
-                        <th class="table-header-cell">Client</th>
-                        <th class="table-header-cell">Paid Amount</th>
-                        <th class="table-header-cell">Date</th>
-                        <th class="table-header-cell">Actions</th>
+                        <th class="table-header-cell">{{ __('Client') }}</th>
+                        <th class="table-header-cell">{{ __('Paid Amount') }}</th>
+                        <th class="table-header-cell">{{ __('Date') }}</th>
+                        <th class="table-header-cell">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody class="table-body">
@@ -65,7 +65,7 @@
                     @empty
                         <tr class="table-row">
                             <td class="table-cell empty-cell" colspan="4">
-                                No payments found.
+                                {{ __('No payments found.') }}
                             </td>
                         </tr>
                     @endforelse
@@ -87,7 +87,7 @@
             <form wire:submit.prevent="updatePayment">
                 <div class="space-y-4">
                     <x-filament::input
-                        label="Payment Amount"
+                        label="{{ __('Payment Amount') }}"
                         type="number"
                         step="0.01"
                         wire:model.defer="form.amount"
@@ -96,7 +96,7 @@
                     />
 
                     <x-filament::input
-                        label="Payment Date"
+                        label="{{ __('Payment Date') }}"
                         type="date"
                         wire:model.defer="form.date"
                         required
@@ -104,7 +104,7 @@
 
                     <div class="flex justify-end gap-2">
                         <x-filament::button type="submit" color="primary">
-                            Save
+                            {{ __('Save') }}
                         </x-filament::button>
                         <x-filament::button
                             type="button"
@@ -112,7 +112,7 @@
                             wire:click="$set('editingPayment', null)"
                             wire:click.prevent="$dispatch('close-modal', { id: 'edit-payment' })"
                         >
-                            Cancel
+                            {{ __('Cancel') }}
                         </x-filament::button>
                     </div>
                 </div>
@@ -123,14 +123,14 @@
     <!-- Delete Confirmation Modal -->
     <x-filament::modal id="delete-payment" :heading="__('Delete Payment')">
         @if($deletingPayment)
-            <p class="mb-4 text-gray-700 dark:text-white">Are you sure you want to delete this payment?</p>
+            <p class="mb-4 text-gray-700 dark:text-white">{{ __('Are you sure you want to delete this payment?') }}</p>
             
             <div class="flex justify-end gap-2">
                 <x-filament::button color="gray" wire:click="$set('deletingPayment', null)">
-                    Cancel
+                    {{ __('Cancel') }}
                 </x-filament::button>
                 <x-filament::button color="danger" wire:click="confirmDeletePayment">
-                    Delete
+                    {{ __('Delete') }}
                 </x-filament::button>
             </div>
         @endif

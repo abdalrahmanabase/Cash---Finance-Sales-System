@@ -70,10 +70,9 @@ class AdminPanelProvider extends PanelProvider
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
-                \App\Http\Middleware\SetLocale::class,
                 StartSession::class,
-                AuthenticateSession::class,
                 \App\Http\Middleware\SetLocale::class,
+                AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,

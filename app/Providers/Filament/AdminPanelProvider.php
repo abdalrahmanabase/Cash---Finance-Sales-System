@@ -17,6 +17,8 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Navigation\UserMenuItem;
+use Filament\PluginServiceProvider;
 
 use App\Filament\Widgets\FinancialStats;
 use App\Filament\Widgets\SaleOptionsButton;
@@ -33,6 +35,16 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('')
             ->login()
+            ->userMenuItems([
+    UserMenuItem::make()
+    ->label('English')
+    ->url(fn (): string => route('lang.switch', 'en'))
+    ,
+UserMenuItem::make()
+    ->label('العربية')
+    ->url(fn (): string => route('lang.switch', 'ar'))
+   ,
+            ])
             ->brandLogo(fn () => view('filament.logo-with-text'))
             ->favicon(asset('favicon-removebg-preview (1).png'))
             ->colors([

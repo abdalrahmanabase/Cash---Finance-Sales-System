@@ -16,14 +16,19 @@ class AppServiceProvider extends ServiceProvider
     }
 
     public function boot(): void
-    {
-        Filament::serving(function (): void {
-            FilamentAsset::register([
-                // Stylesheet in public/css/style.css
-                Css::make('custom-style', asset('css/style.css')),
-                // Your “auto‐label” script in public/js/table-labels.js
-                Js::make('table-labels',    asset('js/table-labels.js')),
-            ]);
-        });
-    }
+{
+    Filament::serving(function (): void {
+        // your global CSS/JS...
+        FilamentAsset::register([
+            Css::make('custom-style', asset('css/style.css')),
+            Js::make('table-labels',    asset('js/table-labels.js')),
+        ]);
+
+        // inject our language‐switcher dropdown at the end of the navbar
+        Filament::registerRenderHook(
+            'navbar.end',
+            fn (): string => view('filament.lang-switch')->render(),
+        );
+    });
+}
 }

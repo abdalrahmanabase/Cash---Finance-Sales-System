@@ -14,10 +14,12 @@ Route::get(
 
 
 
-Route::get('lang/{locale}', function (string $locale) {
-    if (in_array($locale, ['en', 'ar'])) {
+
+Route::get('lang/{locale}', function ($locale) {
+    if (in_array($locale, ['en','ar'])) {
         session(['locale' => $locale]);
     }
 
-    return redirect()->back();
+    // redirect()->back();  <-- remove this
+    return redirect('/');
 })->name('lang.switch');

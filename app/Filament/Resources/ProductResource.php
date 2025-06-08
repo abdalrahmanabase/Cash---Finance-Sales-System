@@ -64,7 +64,7 @@ class ProductResource extends Resource
                     ->required()
                     ->numeric()
                     ->minValue(0)
-                    ->prefix('EGP')
+                    ->prefix('جم')
                     ->reactive()
                     ->debounce(500)
                     ->afterStateUpdated(function (callable $set, callable $get) {
@@ -80,7 +80,7 @@ class ProductResource extends Resource
                     ->required()
                     ->numeric()
                     ->minValue(0)
-                    ->prefix('EGP')
+                    ->prefix('جم')
                     ->reactive()
                     ->debounce(500)
                     ->afterStateUpdated(function (callable $set, callable $get) {
@@ -96,7 +96,7 @@ class ProductResource extends Resource
                 TextInput::make('profit')
                     ->disabled()
                     ->numeric()
-                    ->prefix('EGP')
+                    ->prefix('جم')
                     >label(__('Profit (Auto)'))
                     ->default(0),
         

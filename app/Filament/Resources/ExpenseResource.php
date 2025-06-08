@@ -61,7 +61,7 @@ class ExpenseResource extends Resource
 
                 // 3) AMOUNT AS BEFORE
                 Forms\Components\TextInput::make('amount')
-                    ->label('Amount (EGP)')
+                    ->label('Amount (جم)')
                     ->required()
                     ->numeric()
                     ->minValue(0),
@@ -89,7 +89,7 @@ class ExpenseResource extends Resource
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('amount')
-                    ->label('Amount (EGP)')
+                    ->label('Amount (جم)')
                     ->money('EGP', true)
                     ->sortable(),
 

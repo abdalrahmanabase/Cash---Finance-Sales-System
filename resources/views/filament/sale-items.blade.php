@@ -8,7 +8,7 @@
         <div class="border p-3 rounded-lg">
             <div class="flex justify-between">
                 <span class="font-medium">{{ $item->product->name }}</span>
-                <span>{{ $item->quantity }} × {{ number_format($item->unit_price, 2) }} EGP</span>
+                <span>{{ $item->quantity }} × {{ number_format($item->unit_price, 2) }} جم</span>
             </div>
         </div>
         @endforeach

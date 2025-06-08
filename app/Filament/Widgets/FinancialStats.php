@@ -148,23 +148,23 @@ class FinancialStats extends StatsOverviewWidget
         $this->explainRows = $rows;
 
          return [
-            Card::make(__('Revenue'),     number_format($totalRevenue, 0) . ' EGP')
+            Card::make(__('Revenue'),     number_format($totalRevenue, 0) . ' جم')
                 ->description(__('All cash & paid installments for :label', ['label' => $label]))
                 ->color('success'),
 
-            Card::make(__('Capital'),     number_format($totalCapital, 0) . ' EGP')
+            Card::make(__('Capital'),     number_format($totalCapital, 0) . ' جم')
                 ->description(__('Capital portion of payments for :label', ['label' => $label]))
                 ->color('danger'),
 
-            Card::make(__('Profit'),      number_format($totalProfit, 0) . ' EGP')
+            Card::make(__('Profit'),      number_format($totalProfit, 0) . ' جم')
                 ->description(__('Profit portion of paid amounts for :label', ['label' => $label]))
                 ->color('primary'),
 
-            Card::make(__('Expenses'),    number_format($totalExpenses, 0) . ' EGP')
-                ->description(__('Total expenses for :label. Paid For Owner: :amount EGP', ['label' => $label, 'amount' => number_format($ownerPaidExpenses, 0)]))
+            Card::make(__('Expenses'),    number_format($totalExpenses, 0) . ' جم')
+                ->description(__('Total expenses for :label. Paid For Owner: :amount جم', ['label' => $label, 'amount' => number_format($ownerPaidExpenses, 0)]))
                 ->color('warning'),
 
-            Card::make(__('Net Profit'),  number_format($netProfit, 0) . ' EGP')
+            Card::make(__('Net Profit'),  number_format($netProfit, 0) . ' جم')
                 ->description(__('Profit - Expenses for :label', ['label' => $label]))
                 ->color('success'),
         ];

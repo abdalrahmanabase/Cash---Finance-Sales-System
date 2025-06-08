@@ -41,19 +41,19 @@ class ClientInstallmentPayments extends Page
         ];
     }
 
-     public function getActions(): array
+    public function getActions(): array
     {
         return [
             Action::make('makePayment')
-                ->label('Make Payment')
+                ->label(__('Make Payment'))
                 ->icon('heroicon-o-credit-card')
                 ->color('primary')
-                ->modalHeading('Record Client Payment')
+                ->modalHeading(__('Record Client Payment'))
                 ->modalWidth('xl')
                 ->button()
                 ->form([
                     Select::make('clientId')
-                        ->label('Client')
+                        ->label(__('Client'))
                         ->options(Client::pluck('name', 'id'))
                         ->searchable()
                         ->reactive()
@@ -61,16 +61,18 @@ class ClientInstallmentPayments extends Page
                         ->afterStateUpdated(fn ($state, callable $set) => $set('saleId', null)),
 
                     Select::make('saleId')
-                        ->label('Installment Sale')
+                        ->label(__('Installment Sale'))
                         ->options(fn (callable $get) => Sale::where('client_id', $get('clientId'))
                             ->where('sale_type', 'installment')
                             ->where('status', 'ongoing')
                             ->get()
                             ->mapWithKeys(fn ($sale) => [
                                 $sale->id => new HtmlString(
-                                    'Sale #' . $sale->id .
-                                    ' - ' . number_format($sale->remaining_amount, 2) . ' جم remaining' .
-                                    ' (' . $sale->remaining_months . ' months left)'
+                                    __('Sale #:id - :remaining جم remaining (:months months left)', [
+                                        'id' => $sale->id,
+                                        'remaining' => number_format($sale->remaining_amount, 2),
+                                        'months' => $sale->remaining_months,
+                                    ])
                                 )
                             ]))
                         ->required()
@@ -90,7 +92,7 @@ class ClientInstallmentPayments extends Page
                         }),
 
                     TextInput::make('paymentAmount')
-                        ->label('Payment Amount (جم)')
+                        ->label(__('Payment Amount (:currency)', ['currency' => __('جم')]))
                         ->numeric()
                         ->required()
                         ->minValue(0.01)
@@ -106,45 +108,47 @@ class ClientInstallmentPayments extends Page
                                 return function (string $attribute, $value, $fail) use ($get) {
                                     $sale = Sale::find($get('saleId'));
                                     if ($sale && $value > $sale->remaining_amount) {
-                                        $fail("Payment amount cannot exceed remaining amount of " . number_format($sale->remaining_amount, 2) . " جم");
+                                        $fail(__("Payment amount cannot exceed remaining amount of :amount جم", [
+                                            'amount' => number_format($sale->remaining_amount, 2),
+                                        ]));
                                     }
                                 };
                             }
                         ]),
 
                     DatePicker::make('paymentDate')
-                        ->label('Payment Date')
+                        ->label(__('Payment Date'))
                         ->default(now())
                         ->required()
                         ->maxDate(now()),
 
                     TextInput::make('remainingAmount')
-                        ->label('Remaining Amount')
+                        ->label(__('Remaining Amount'))
                         ->disabled()
                         ->reactive(),
 
                     TextInput::make('monthlyInstallment')
-                        ->label('Monthly Payment')
+                        ->label(__('Monthly Payment'))
                         ->disabled()
                         ->reactive(),
 
                     TextInput::make('currentMonthDue')
-                        ->label('Due for This Month')
+                        ->label(__('Due for This Month'))
                         ->default(fn (callable $get) => optional(Sale::find($get('saleId')))->current_month_due)
                         ->disabled()
                         ->reactive(),
 
                     TextInput::make('fullyPaidMonths')
-                        ->label('Fully Paid Months')
+                        ->label(__('Fully Paid Months'))
                         ->disabled()
                         ->reactive(),
 
                     Placeholder::make('paymentHistory')
-                        ->label('Payment History')
+                        ->label(__('Payment History'))
                         ->content(function (callable $get) {
                             $sale = Sale::find($get('saleId'));
                             if (!$sale || empty($sale->payment_dates)) {
-                                return 'No payments recorded yet.';
+                                return __('No payments recorded yet.');
                             }
 
                             $history = '';
@@ -153,7 +157,7 @@ class ClientInstallmentPayments extends Page
                             foreach ($payments as $payment) {
                                 $history .= '<div class="flex justify-between border-b pb-1">';
                                 $history .= '<span>' . Carbon::parse($payment['date'])->format('d-m-Y') . '</span>';
-                                $history .= '<span class="font-medium">جم ' . number_format($payment['amount'], 2) . '</span>';
+                                $history .= '<span class="font-medium">' . __('جم') . ' ' . number_format($payment['amount'], 2) . '</span>';
                                 $history .= '</div>';
                             }
 
@@ -167,7 +171,7 @@ class ClientInstallmentPayments extends Page
 
                     if (!$sale) {
                         Notification::make()
-                            ->title('Sale not found')
+                            ->title(__('Sale not found'))
                             ->danger()
                             ->send();
                         return;
@@ -175,8 +179,10 @@ class ClientInstallmentPayments extends Page
 
                     if ($data['paymentAmount'] > $sale->remaining_amount) {
                         Notification::make()
-                            ->title('Payment amount too large')
-                            ->body("Payment cannot exceed remaining amount of " . number_format($sale->remaining_amount, 2) . " جم")
+                            ->title(__('Payment amount too large'))
+                            ->body(__("Payment cannot exceed remaining amount of :amount جم", [
+                                'amount' => number_format($sale->remaining_amount, 2),
+                            ]))
                             ->danger()
                             ->send();
                         return;
@@ -194,17 +200,20 @@ class ClientInstallmentPayments extends Page
                         $progress = $sale->getPaymentScheduleProgress();
 
                         Notification::make()
-                            ->title('Payment Successful')
+                            ->title(__('Payment Successful'))
                             ->body(
-                                "Payment of جم " . number_format($data['paymentAmount'], 2) . " recorded.\n" .
-                                "Remaining: جم " . number_format($status['remaining_amount'], 2) . "\n" .
-                                "Months paid: " . $progress['fully_paid_months'] . "/" . $sale->months_count
+                                __("Payment of :amount جم recorded.\nRemaining: :remaining جم\nMonths paid: :paid/:total", [
+                                    'amount' => number_format($data['paymentAmount'], 2),
+                                    'remaining' => number_format($status['remaining_amount'], 2),
+                                    'paid' => $progress['fully_paid_months'],
+                                    'total' => $sale->months_count,
+                                ])
                             )
                             ->success()
                             ->send();
                     } else {
                         Notification::make()
-                            ->title('Payment Failed')
+                            ->title(__('Payment Failed'))
                             ->danger()
                             ->send();
                     }

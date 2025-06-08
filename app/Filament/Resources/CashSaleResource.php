@@ -24,7 +24,7 @@ class CashSaleResource extends Resource
 {
     protected static ?string $model = Sale::class;
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
-    
+
     protected static ?string $slug = 'sales/cash';
 
     public static function getNavigationLabel(): string
@@ -41,7 +41,7 @@ class CashSaleResource extends Resource
     {
         return $form
             ->schema([
-                Section::make('Sale Information')
+                Section::make(__('Sale Information'))
                     ->schema([
                         Hidden::make('sale_type')->default('cash'),
                         Hidden::make('status')->default('completed'),
@@ -61,7 +61,7 @@ class CashSaleResource extends Resource
             ->required()
             ->schema([
                 Select::make('product_id')
-                    ->label('Product')
+                    ->label(__('Product'))
                     ->relationship('product', 'name')
                     ->searchable()
                     ->preload()
@@ -81,6 +81,7 @@ class CashSaleResource extends Resource
                     ->required(),
 
                 TextInput::make('quantity')
+                    ->label(__('Quantity'))
                     ->numeric()
                     ->default(0)
                     ->minValue(1)
@@ -98,8 +99,8 @@ class CashSaleResource extends Resource
                             $product = Product::find($productId);
                             if ($product && $quantity > $product->stock) {
                                 Notification::make()
-                                    ->title('Insufficient stock')
-                                    ->body("Only {$product->stock} available")
+                                    ->title(__('Insufficient stock'))
+                                    ->body(__('Only :stock available', ['stock' => $product->stock]))
                                     ->danger()
                                     ->send();
                                 $quantity = $product->stock;
@@ -112,21 +113,22 @@ class CashSaleResource extends Resource
                     ->required(),
 
                 TextInput::make('unit_price')
+                    ->label(__('Unit Price'))
                     ->numeric()
-                    ->prefix('جم')
+                    ->prefix(app()->getLocale() === 'ar' ? 'جم' : 'EGP')
                     ->disabled()
                     ->dehydrated(),
 
                 TextInput::make('available_stock')
-                    ->label('Available Stock')
+                    ->label(__('Available Stock'))
                     ->numeric()
                     ->disabled()
                     ->dehydrated(false),
 
                 TextInput::make('total')
-                    ->label('Item Total')
+                    ->label(__('Item Total'))
                     ->numeric()
-                    ->prefix('جم')
+                    ->prefix(app()->getLocale() === 'ar' ? 'جم' : 'EGP')
                     ->disabled()
                     ->dehydrated(),
             ])
@@ -147,10 +149,10 @@ class CashSaleResource extends Resource
                 }),
 
             Select::make('discount_type')
-                ->label('Discount Type')
+                ->label(__('Discount Type'))
                 ->options([
-                    'fixed' => 'Fixed (جم)',
-                    'percent' => 'Percent (%)',
+                    'fixed' => __('Fixed (:currency)', ['currency' => app()->getLocale() === 'ar' ? 'جم' : 'EGP']),
+                    'percent' => __('Percent (%)'),
                 ])
                 ->default('fixed')
                 ->dehydrated(false)
@@ -170,7 +172,7 @@ class CashSaleResource extends Resource
                 }),
 
             TextInput::make('discount_value')
-                ->label('Discount')
+                ->label(__('Discount'))
                 ->numeric()
                 ->default(0)
                 ->minValue(0)
@@ -193,9 +195,9 @@ class CashSaleResource extends Resource
             Hidden::make('discount')->dehydrated(true),
 
             TextInput::make('final_price')
-                ->label('Final Price')
+                ->label(__('Final Price'))
                 ->numeric()
-                ->prefix('جم')
+                ->prefix(app()->getLocale() === 'ar' ? 'جم' : 'EGP')
                 ->disabled()
                 ->dehydrated()
                 ->afterStateHydrated(function (Set $set, $state) {
@@ -208,10 +210,10 @@ class CashSaleResource extends Resource
 
     protected static function additionalInformationSection(): Section
     {
-        return Section::make('Additional Information')
+        return Section::make(__('Additional Information'))
             ->schema([
                 TextInput::make('notes')
-                    ->label('Notes')
+                    ->label(__('Notes'))
                     ->columnSpanFull()
                     ->maxLength(1000)
                     ->nullable(),
@@ -224,13 +226,13 @@ class CashSaleResource extends Resource
             ->modifyQueryUsing(fn ($query) => $query->where('sale_type', 'cash'))
             ->columns([
                 TextColumn::make('created_at')
-                    ->label('Date')
+                    ->label(__('Date'))
                     ->date('d-m-Y')
                     ->sortable(),
 
                 TextColumn::make('final_price')
-                    ->label('Amount')
-                    ->money('EGP')
+                    ->label(__('Final Price'))
+                    ->getStateUsing(fn ($record) => number_format($record->final_price, 2) . ' ' . (app()->getLocale() === 'ar' ? 'جم' : 'EGP'))
                     ->sortable(),
             ])
             ->actions([
@@ -253,7 +255,7 @@ class CashSaleResource extends Resource
                             'items' => $record->items()->with('product')->get()
                         ]);
                     })
-                    ->modalHeading('Sale Items'),
+                    ->modalHeading(__('Sale Items')),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

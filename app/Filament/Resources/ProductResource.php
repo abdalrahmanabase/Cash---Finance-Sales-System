@@ -19,9 +19,25 @@ class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
     protected static ?string $navigationIcon = 'heroicon-o-cube';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('Products');
+    }
+
     public static function getNavigationGroup(): ?string
     {
         return __('Products Management');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Product');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Products');
     }
 
     public static function form(Form $form): Form
@@ -29,131 +45,127 @@ class ProductResource extends Resource
         return $form->schema([
             Section::make(__('Product Information'))->schema([
                 TextInput::make('name')
+                    ->label(__('Name'))
                     ->required()
                     ->maxLength(255)
                     ->columnSpan(2),
 
                 TextInput::make('code')
+                    ->label(__('Code'))
                     ->unique(ignoreRecord: true)
                     ->nullable()
                     ->maxLength(255),
 
                 Select::make('category_id')
+                    ->label(__('Category'))
                     ->relationship('category', 'name')
                     ->required()
                     ->preload()
                     ->searchable(),
 
                 Select::make('provider_id')
+                    ->label(__('Provider'))
                     ->relationship('provider', 'name')
                     ->required()
                     ->preload()
                     ->searchable(),
 
                 TextInput::make('stock')
+                    ->label(__('Current Stock'))
                     ->required()
                     ->numeric()
                     ->minValue(0)
-                    ->default(0)
-                    ->label(__('Current Stock')),
+                    ->default(0),
             ])->columns(3),
 
             Section::make(__('Pricing'))
-            ->schema([
-                TextInput::make('purchase_price')
-                    ->required()
-                    ->numeric()
-                    ->minValue(0)
-                    ->prefix('جم')
-                    ->reactive()
-                    ->debounce(500)
-                    ->afterStateUpdated(function (callable $set, callable $get) {
-                        $purchase = floatval($get('purchase_price'));
-                        $cash = floatval($get('cash_price'));
-                        $profit = $cash - $purchase;
+                ->schema([
+                    TextInput::make('purchase_price')
+                        ->label(__('Purchase Price'))
+                        ->required()
+                        ->numeric()
+                        ->minValue(0)
+                        ->prefix(__('EGP'))
+                        ->reactive()
+                        ->debounce(500)
+                        ->afterStateUpdated(function (callable $set, callable $get) {
+                            $purchase = floatval($get('purchase_price'));
+                            $cash = floatval($get('cash_price'));
+                            $profit = $cash - $purchase;
 
-                        $set('profit', $profit);
-                        $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0);
-                    }),
+                            $set('profit', $profit);
+                            $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0);
+                        }),
 
-                TextInput::make('cash_price')
-                    ->required()
-                    ->numeric()
-                    ->minValue(0)
-                    ->prefix('جم')
-                    ->reactive()
-                    ->debounce(500)
-                    ->afterStateUpdated(function (callable $set, callable $get) {
-                        $purchase = floatval($get('purchase_price'));
-                        $cash = floatval($get('cash_price'));
-                        $profit = $cash - $purchase;
+                    TextInput::make('cash_price')
+                        ->label(__('Cash Price'))
+                        ->required()
+                        ->numeric()
+                        ->minValue(0)
+                        ->prefix(__('EGP'))
+                        ->reactive()
+                        ->debounce(500)
+                        ->afterStateUpdated(function (callable $set, callable $get) {
+                            $purchase = floatval($get('purchase_price'));
+                            $cash = floatval($get('cash_price'));
+                            $profit = $cash - $purchase;
 
-                        $set('profit', $profit);
-                        $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0);
-                    }),
+                            $set('profit', $profit);
+                            $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0);
+                        }),
 
-        
-                TextInput::make('profit')
-                    ->disabled()
-                    ->numeric()
-                    ->prefix('جم')
-                    >label(__('Profit (Auto)'))
-                    ->default(0),
-        
-                TextInput::make('profit_percentage')
-                    ->disabled()
-                    ->numeric()
-                    ->suffix('%')
-                    ->label(__('Profit %'))
-                    ->default(0),
-            ])
-            ->columns(3),
+                    TextInput::make('profit')
+                        ->label(__('Profit (Auto)'))
+                        ->disabled()
+                        ->numeric()
+                        ->prefix(__('EGP'))
+                        ->default(0),
+
+                    TextInput::make('profit_percentage')
+                        ->label(__('Profit %'))
+                        ->disabled()
+                        ->numeric()
+                        ->suffix('%')
+                        ->default(0),
+                ])
+                ->columns(3),
         ]);
     }
-
-    // private static function updateProfitCalculations(callable $set, callable $get): void
-    // {
-    //     $purchase = (float) $get('purchase_price');
-    //     $cash = (float) $get('cash_price');
-
-    //     if (!is_numeric($purchase) || !is_numeric($cash)) {
-    //         return;
-    //     }
-
-    //     $profit = $cash - $purchase;
-    //     $percentage = $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0;
-
-    //     $set('profit', $profit);
-    //     $set('profit_percentage', $percentage);
-    // }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('name')->sortable()->searchable(),
+                TextColumn::make('name')
+                    ->label(__('Name'))
+                    ->sortable()
+                    ->searchable(),
 
                 TextColumn::make('category.name')
+                    ->label(__('Category'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('purchase_price')
+                    ->label(__('Purchase Price'))
                     ->sortable()
                     ->money('EGP')
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('cash_price')
+                    ->label(__('Cash Price'))
                     ->sortable()
                     ->money('EGP'),
 
                 TextColumn::make('profit')
+                    ->label(__('Profit'))
                     ->sortable()
                     ->money('EGP')
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('stock')
-                    ->sortable()
                     ->label(__('Stock'))
+                    ->sortable()
                     ->numeric()
                     ->color(fn ($record) => $record->stock > 0 ? 'success' : 'danger')
                     ->weight('bold'),
@@ -169,11 +181,13 @@ class ProductResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('category')
+                    ->label(__('Category'))
                     ->relationship('category', 'name')
                     ->searchable()
                     ->preload(),
 
                 Tables\Filters\SelectFilter::make('provider')
+                    ->label(__('Provider'))
                     ->relationship('provider', 'name')
                     ->searchable()
                     ->preload(),
@@ -197,10 +211,10 @@ class ProductResource extends Resource
                     ->color('success')
                     ->form([
                         TextInput::make('quantity')
+                            ->label(__('Quantity to Add'))
                             ->required()
                             ->numeric()
-                            ->minValue(1)
-                            ->label(__('Quantity to Add'))
+                            ->minValue(1),
                     ])
                     ->action(fn (Product $record, array $data) => $record->increment('stock', $data['quantity']))
                     ->visible(fn ($record) => $record->exists),

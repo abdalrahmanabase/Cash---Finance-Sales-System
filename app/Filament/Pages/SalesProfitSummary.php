@@ -59,126 +59,112 @@ class SalesProfitSummary extends Page implements HasTable
     }
 
     public function table(Table $table): Table
-{
-    return $table
-        ->query($this->getTableQuery())
-        ->columns([
-            TextColumn::make('created_at')
-                ->label('Date')
-                ->date('d-m-Y')
-                ->sortable(),
+    {
+        $currency = app()->getLocale() === 'ar' ? 'جم' : 'EGP';
 
-            TextColumn::make('final_price')
-                ->label('Sale Amount')
-                ->money('EGP')
-                ->sortable(),
+        return $table
+            ->query($this->getTableQuery())
+            ->columns([
+                TextColumn::make('created_at')
+                    ->label(__('Date'))
+                    ->date('d-m-Y')
+                    ->sortable(),
 
-            // show the raw cost
-            TextColumn::make('cost_raw')
-                ->label('Cost')
-                ->money('EGP'),
+                TextColumn::make('final_price')
+                    ->label(__('Sale Amount'))
+                    ->getStateUsing(fn ($record) => number_format($record->final_price, 2) . " $currency")
+                    ->sortable(),
 
-            // show the raw profit
-            TextColumn::make('profit_raw')
-                ->label('Profit')
-                ->money('EGP')
-                ->color(fn($record) => $record->profit_raw >= 0 ? 'success' : 'danger'),
+                TextColumn::make('cost_raw')
+                    ->label(__('Cost'))
+                    ->getStateUsing(fn ($record) => number_format($record->cost_raw, 2) . " $currency"),
 
+                TextColumn::make('profit_raw')
+                    ->label(__('Profit'))
+                    ->getStateUsing(fn ($record) => number_format($record->profit_raw, 2) . " $currency")
+                    ->color(fn ($record) => $record->profit_raw >= 0 ? 'success' : 'danger'),
             ])
             ->filters([
-                // Preset time ranges
                 Tables\Filters\SelectFilter::make('preset_time_range')
-                    ->label('Quick Date Range')
+                    ->label(__('Quick Date Range'))
                     ->options([
-                        'today' => 'Today',
-                        'yesterday' => 'Yesterday',
-                        'this_week' => 'This Week',
-                        'last_week' => 'Last Week',
-                        'this_month' => 'This Month',
-                        'last_month' => 'Last Month',
-                        'this_year' => 'This Year',
-                        'last_year' => 'Last Year',
+                        'today' => __('Today'),
+                        'yesterday' => __('Yesterday'),
+                        'this_week' => __('This Week'),
+                        'last_week' => __('Last Week'),
+                        'this_month' => __('This Month'),
+                        'last_month' => __('Last Month'),
+                        'this_year' => __('This Year'),
+                        'last_year' => __('Last Year'),
                     ])
                     ->default('all')
                     ->query(function (Builder $query, $state) {
                         if ($state === 'all' || empty($state)) {
-                            // No date filter for 'all'
                             return;
                         }
-                        
+
                         $this->applyPresetTimeFilter($query, $state['value']);
                     }),
-                    
-                // Custom date range filter
+
                 Filter::make('custom_date_range')
-    ->form([
-        DatePicker::make('start_date')
-            ->label('From Date'),
-        DatePicker::make('end_date')
-            ->label('To Date')
-            ->default(now()), // 👈 Set default to today
-    ])
-    ->query(function (Builder $query, array $state) {
-        return $query
-            ->when(
-                $state['start_date'],
-                fn (Builder $query, $date) => $query->whereDate('created_at', '>=', $date)
-            )
-            ->when(
-                $state['end_date'],
-                fn (Builder $query, $date) => $query->whereDate('created_at', '<=', $date)
-            );
-    })
-    ->indicateUsing(function (array $state): ?string {
-        if (!$state['start_date'] || !$state['end_date']) {
-            return null;
-        }
+                    ->form([
+                        DatePicker::make('start_date')
+                            ->label(__('From Date')),
+                        DatePicker::make('end_date')
+                            ->label(__('To Date'))
+                            ->default(now()),
+                    ])
+                    ->query(function (Builder $query, array $state) {
+                        return $query
+                            ->when(
+                                $state['start_date'],
+                                fn (Builder $query, $date) => $query->whereDate('created_at', '>=', $date)
+                            )
+                            ->when(
+                                $state['end_date'],
+                                fn (Builder $query, $date) => $query->whereDate('created_at', '<=', $date)
+                            );
+                    })
+                    ->indicateUsing(function (array $state): ?string {
+                        if (!$state['start_date'] || !$state['end_date']) {
+                            return null;
+                        }
 
-        return 'Custom Range: ' .
-            Carbon::parse($state['start_date'])->format('d, M, Y') .
-            ' - ' .
-            Carbon::parse($state['end_date'])->format('d, M, Y');
-    }),
-
-                    
+                        return __('Custom Range: :start - :end', [
+                            'start' => Carbon::parse($state['start_date'])->format('d, M, Y'),
+                            'end' => Carbon::parse($state['end_date'])->format('d, M, Y'),
+                        ]);
+                    }),
             ])
             ->defaultSort('created_at', 'desc');
     }
 
     protected function getTableQuery(): Builder
-{
-    return Sale::query()
-        ->where('sale_type', 'cash')
-        ->with('items.product')
-        ->select('sales.*')
-
-        // alias the DB‐computed total cost under a new name:
-        ->selectRaw(<<<'SQL'
-            (
-              SELECT SUM(si.quantity * p.purchase_price)
-              FROM sale_items si
-              JOIN products p ON si.product_id = p.id
-              WHERE si.sale_id = sales.id
-            ) AS cost_raw
-        SQL
-        )
-
-        // alias the DB‐computed profit (final_price - cost) under a new name:
-        ->selectRaw(<<<'SQL'
-            (
-              sales.final_price
-              - (
+    {
+        return Sale::query()
+            ->where('sale_type', 'cash')
+            ->with('items.product')
+            ->select('sales.*')
+            ->selectRaw(<<<'SQL'
+                (
                   SELECT SUM(si.quantity * p.purchase_price)
                   FROM sale_items si
                   JOIN products p ON si.product_id = p.id
                   WHERE si.sale_id = sales.id
-                )
-            ) AS profit_raw
-        SQL
-        );
-}
-
-
+                ) AS cost_raw
+            SQL)
+            ->selectRaw(<<<'SQL'
+                (
+                  sales.final_price
+                  - (
+                      SELECT SUM(si.quantity * p.purchase_price)
+                      FROM sale_items si
+                      JOIN products p ON si.product_id = p.id
+                      WHERE si.sale_id = sales.id
+                    )
+                ) AS profit_raw
+            SQL);
+    }
 
     protected function applyPresetTimeFilter(Builder $query, string $timeRange): void
     {
@@ -192,46 +178,41 @@ class SalesProfitSummary extends Page implements HasTable
                 $query->whereDate('created_at', $now->copy()->subDay()->toDateString());
                 break;
             case 'this_week':
-                $startOfWeek = $now->copy()->startOfDay()->subDays(($now->dayOfWeek + 1) % 7); // Saturday
-                $endOfWeek = $startOfWeek->copy()->addDays(6)->endOfDay(); // Friday
-                $query->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+                $query->whereBetween('created_at', [
+                    $now->copy()->startOfWeek(),
+                    $now->copy()->endOfWeek(),
+                ]);
                 break;
-
             case 'last_week':
-                $startOfLastWeek = $now->copy()->startOfDay()->subDays(($now->dayOfWeek + 1) % 7 + 7); // Last Saturday
-                $endOfLastWeek = $startOfLastWeek->copy()->addDays(6)->endOfDay(); // Last Friday
-                $query->whereBetween('created_at', [$startOfLastWeek, $endOfLastWeek]);
+                $query->whereBetween('created_at', [
+                    $now->copy()->subWeek()->startOfWeek(),
+                    $now->copy()->subWeek()->endOfWeek(),
+                ]);
                 break;
             case 'this_month':
                 $query->whereBetween('created_at', [
                     $now->copy()->startOfMonth(),
-                    $now->copy()->endOfMonth()
+                    $now->copy()->endOfMonth(),
                 ]);
                 break;
             case 'last_month':
                 $query->whereBetween('created_at', [
                     $now->copy()->subMonth()->startOfMonth(),
-                    $now->copy()->subMonth()->endOfMonth()
+                    $now->copy()->subMonth()->endOfMonth(),
                 ]);
                 break;
             case 'this_year':
                 $query->whereBetween('created_at', [
                     $now->copy()->startOfYear(),
-                    $now->copy()->endOfYear()
+                    $now->copy()->endOfYear(),
                 ]);
                 break;
             case 'last_year':
                 $query->whereBetween('created_at', [
                     $now->copy()->subYear()->startOfYear(),
-                    $now->copy()->subYear()->endOfYear()
+                    $now->copy()->subYear()->endOfYear(),
                 ]);
                 break;
         }
-    }
-
-    protected function isSaleTypeFilterHidden(): bool
-    {
-        // Hide if you want to force only cash sales
-        return true;
     }
 }

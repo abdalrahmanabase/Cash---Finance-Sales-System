@@ -16,9 +16,24 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('Users');
+    }
+
     public static function getNavigationGroup(): ?string
     {
         return __('User Management');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('User');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Users');
     }
 
     public static function canCreate(): bool
@@ -31,36 +46,36 @@ class UserResource extends Resource
         return $form->schema([
             TextInput::make('name')
                 ->required()
-                ->label('Name'),
+                ->label(__('Name')),
 
-                TextInput::make('email')
-                ->label('Email')
+            TextInput::make('email')
+                ->label(__('Email'))
                 ->required()
                 ->email()
-                ->unique(ignoreRecord: true), 
-                
-                
-                TextInput::make('password')
+                ->unique(ignoreRecord: true),
+
+
+            TextInput::make('password')
                 ->password()
-                ->label('Password')
+                ->label(__('Password'))
                 ->required(fn (string $context) => $context === 'create')
                 ->dehydrateStateUsing(fn ($state) => filled($state) ? Hash::make($state) : null)
                 ->dehydrated(fn ($state) => filled($state))
                 ->maxLength(255),
-            
+
             Select::make('role')
                 ->options([
-                    'super_admin' => 'Super Admin',
-                    'admin' => 'Admin',
-                    'partner' => 'Partner',
+                    'super_admin' => __('Super Admin'),
+                    'admin' => __('Admin'),
+                    'partner' => __('Partner'),
                 ])
                 ->default('admin')
-                ->label('Role')
+                ->label(__('Role'))
                 ->disabled(fn ($record) => $record && $record->role !== null),
-                
+
             TextInput::make('capital_share')
                 ->numeric()
-                ->label('Capital Share')
+                ->label(__('Capital Share'))
                 ->default(0),
         ]);
     }
@@ -69,12 +84,24 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->sortable()->searchable(),
-                TextColumn::make('email')->sortable()->searchable(),
-                TextColumn::make('role')->sortable(),
+                TextColumn::make('name')
+                    ->label(__('Name'))
+                    ->sortable()
+                    ->searchable(),
+
+                TextColumn::make('email')
+                    ->label(__('Email'))
+                    ->sortable()
+                    ->searchable(),
+
+                TextColumn::make('role')
+                    ->label(__('Role'))
+                    ->sortable(),
+
                 TextColumn::make('capital_share')
-                ->sortable()
-                ->formatStateUsing(fn ($state) => 'جم ' . number_format($state, 0)),
+                    ->label(__('Capital Share'))
+                    ->sortable()
+                    ->formatStateUsing(fn ($state) => __('EGP') . ' ' . number_format($state, 0)),
             ]);
     }
 

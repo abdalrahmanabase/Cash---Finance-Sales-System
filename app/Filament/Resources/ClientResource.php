@@ -40,61 +40,61 @@ class ClientResource extends Resource
     {
         return $form
             ->schema([
-                Section::make('Client Information')
+                Section::make(__('Client Information'))
                     ->schema([
                         TextInput::make('name')
                             ->required()
                             ->maxLength(255)
-                            ->label('Client Name'),
+                            ->label(__('Client Name')),
 
                         TextInput::make('address')
                             ->required()
                             ->maxLength(255)
-                            ->label('Client Address'),
+                            ->label(__('Client Address')),
 
                         TextInput::make('phone')
                             ->required()
                             ->maxLength(11)
-                            ->label('Client Phone'),
+                            ->label(__('Client Phone')),
 
                         TextInput::make('secondary_phone')
                             ->nullable()
                             ->maxLength(11)
-                            ->label('Secondary Phone'),
+                            ->label(__('Secondary Phone')),
 
                         FileUpload::make('proof_of_address')
                             ->directory('client-documents')
                             ->nullable()
                             ->image()
                             ->preserveFilenames()
-                                ->downloadable()
-                                ->openable()
-                                ->previewable()
-                            ->label('Proof of Address'),
+                            ->downloadable()
+                            ->openable()
+                            ->previewable()
+                            ->label(__('Proof of Address')),
 
                         FileUpload::make('id_photo')
                             ->directory('client-documents')
                             ->nullable()
                             ->image()
                             ->preserveFilenames()
-                                ->downloadable()
-                                ->openable()
-                                ->previewable()
-                            ->label('ID Photo'),
+                            ->downloadable()
+                            ->openable()
+                            ->previewable()
+                            ->label(__('ID Photo')),
 
                         TextInput::make('receipt_number')
                             ->nullable()
                             ->maxLength(255)
-                            ->label('Receipt Number'),
+                            ->label(__('Receipt Number')),
 
                         TextInput::make('job')
                             ->nullable()
                             ->maxLength(255)
-                            ->label('Job'),
+                            ->label(__('Job')),
                     ])
                     ->columns(2),
 
-                Section::make('Guarantors')
+                Section::make(__('Guarantors'))
                     ->schema([
                         Repeater::make('guarantors')
                             ->relationship()
@@ -102,22 +102,22 @@ class ClientResource extends Resource
                                 TextInput::make('name')
                                     ->required()
                                     ->maxLength(255)
-                                    ->label('Guarantor Name'),
+                                    ->label(__('Guarantor Name')),
 
                                 TextInput::make('address')
                                     ->required()
                                     ->maxLength(255)
-                                    ->label('Guarantor Address'),
+                                    ->label(__('Guarantor Address')),
 
                                 TextInput::make('phone')
                                     ->required()
                                     ->maxLength(11)
-                                    ->label('Guarantor Phone'),
+                                    ->label(__('Guarantor Phone')),
 
                                 TextInput::make('secondary_phone')
                                     ->nullable()
                                     ->maxLength(11)
-                                    ->label('Secondary Phone'),
+                                    ->label(__('Secondary Phone')),
 
                                 FileUpload::make('proof_of_address')
                                     ->directory('guarantor-documents')
@@ -127,7 +127,7 @@ class ClientResource extends Resource
                                     ->downloadable()
                                     ->openable()
                                     ->previewable()
-                                    ->label('Guarantor Proof of Address'),
+                                    ->label(__('Guarantor Proof of Address')),
 
                                 FileUpload::make('id_photo')
                                     ->directory('guarantor-documents')
@@ -137,17 +137,17 @@ class ClientResource extends Resource
                                     ->downloadable()
                                     ->openable()
                                     ->previewable()
-                                    ->label('Guarantor ID Photo'),
+                                    ->label(__('Guarantor ID Photo')),
 
                                 TextInput::make('relation')
                                     ->nullable()
                                     ->maxLength(255)
-                                    ->label('Relation to Client'),
+                                    ->label(__('Relation to Client')),
 
                                 TextInput::make('receipt_number')
                                     ->nullable()
                                     ->maxLength(255)
-                                    ->label('Guarantor Receipt Number'),
+                                    ->label(__('Guarantor Receipt Number')),
                             ])
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                             ->minItems(0)
@@ -164,21 +164,22 @@ class ClientResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->label(__('Client Name')),
 
                 TextColumn::make('phone')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->label(__('Client Phone')),
 
                 TextColumn::make('guarantors_count')
                     ->counts('guarantors')
-                    ->label('Guarantors')
+                    ->label(__('Guarantors'))
                     ->sortable(),
             ])
             ->filters([
                 // Add filters if needed
-            ])
-            ;
+            ]);
     }
 
     public static function getPages(): array

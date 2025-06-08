@@ -20,6 +20,16 @@ class PaymentResource extends Resource
     protected static ?string $navigationGroup = 'Clients Management';
     protected static ?string $navigationLabel = 'Payments Table';
 
+    public static function getModelLabel(): string
+    {
+        return __('Payment');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Payments');
+    }
+
     public static function getNavigationLabel(): string
     {
         return __('Payments Table');
@@ -35,7 +45,7 @@ class PaymentResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('client.name')
-                    ->label('Client Name')
+                    ->label(__('Client Name'))
                     ->sortable()
                     ->searchable()
                     // Link to the ClientInstallmentPayments page, pre‐filtering by this client_id:
@@ -49,17 +59,17 @@ class PaymentResource extends Resource
                     ->openUrlInNewTab(),
 
                 TextColumn::make('next_payment_date')
-                    ->label('Next Payment Date')
+                    ->label(__('Next Payment Date'))
                     ->date('d-m-Y')
                     ->sortable(),
 
                 TextColumn::make('monthly_installment')
-                    ->label('Monthly Payment')
+                    ->label(__('Monthly Payment'))
                     ->money('EGP')
                     ->sortable(),
 
                 TextColumn::make('amount_due')
-                    ->label('Amount Due')
+                    ->label(__('Amount Due'))
                     ->money('EGP')
                     ->getStateUsing(function (Sale $record) {
                         $progress = $record->getPaymentScheduleProgress();
@@ -69,7 +79,7 @@ class PaymentResource extends Resource
                     }),
 
                 TextColumn::make('status')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->badge()
                     ->color(fn ($state, Sale $record) => match (true) {
                         $record->isPaymentOverdue()    => 'danger',
@@ -78,17 +88,17 @@ class PaymentResource extends Resource
                     })
                     ->formatStateUsing(function ($state, Sale $record) {
                         if ($record->status === 'completed') {
-                            return 'Fully Paid';
+                            return __('Fully Paid');
                         }
                         if ($record->isPaymentOverdue()) {
-                            return 'Overdue';
+                            return __('Overdue');
                         }
-                        return 'Upcoming';
+                        return __('Upcoming');
                     }),
             ])
             ->filters([
                 SelectFilter::make('due_month')
-                    ->label('By Due Month')
+                    ->label(__('By Due Month'))
                     ->options(
                         collect(range(-3, 3))
                             ->mapWithKeys(fn ($i) => [
@@ -103,8 +113,8 @@ class PaymentResource extends Resource
                             ])
                             ->toArray()
                         + [
-                            'overdue' => 'Overdue',
-                            'all'     => 'All',
+                            'overdue' => __('Overdue'),
+                            'all'     => __('All'),
                         ]
                     )
                     ->default(Carbon::now()->format('Y-m'))
@@ -126,7 +136,7 @@ class PaymentResource extends Resource
             ->bulkActions([])
             ->headerActions([
                 Tables\Actions\Action::make('Go to Client Payments')
-                    ->label('Client Payments')
+                    ->label(__('Client Payments'))
                     ->url(fn () => route('filament.pages.client-installment-payments'))
                     ->icon('heroicon-o-arrow-right'),
             ]);

@@ -5,7 +5,6 @@ namespace App\Filament\Pages;
 use Filament\Pages\Page;
 use App\Filament\Widgets\FinancialStats;
 
-
 class FinancialOverview extends Page
 {
     protected static string $view = 'filament.pages.financial-overview';
@@ -16,13 +15,11 @@ class FinancialOverview extends Page
 
     public static function getNavigationLabel(): string
     {
-        return __('Financial Overview');
+        return __('Financial Overview'); // Translatable navigation label
     }
 
     public static function getNavigationGroup(): ?string
     {
-        return __('Financial Management');
+        return __('Financial Management'); // Translatable navigation group
     }
-
-
 }

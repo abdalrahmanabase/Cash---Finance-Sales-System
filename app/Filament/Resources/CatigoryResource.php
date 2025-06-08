@@ -15,9 +15,24 @@ class CatigoryResource extends Resource
     protected static ?string $model = Category::class;
     protected static ?string $navigationIcon = 'heroicon-o-tag';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('Categories');
+    }
+
     public static function getNavigationGroup(): ?string
     {
         return __('Products Management');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Category');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Categories');
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -46,14 +61,17 @@ class CatigoryResource extends Resource
             TextInput::make('name')
                 ->required()
                 ->unique()
-                ->label('Category Name'),
+                ->label(__('Category Name')),
         ]);
     }
 
     public static function table(Tables\Table $table): Tables\Table
     {
         return $table->columns([
-            TextColumn::make('name')->searchable()->sortable(),
+            TextColumn::make('name')
+                ->label(__('Category Name'))
+                ->searchable()
+                ->sortable(),
         ]);
     }
 

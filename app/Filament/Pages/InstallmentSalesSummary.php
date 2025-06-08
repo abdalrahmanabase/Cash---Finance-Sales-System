@@ -18,8 +18,8 @@ class InstallmentSalesSummary extends Page implements HasTable
 
     public $selectedMonth;
 
-    protected static ?string $navigationIcon  = 'heroicon-o-chart-bar';
-    protected static string  $view            = 'filament.pages.installment-sales-summary';
+    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
+    protected static string $view = 'filament.pages.installment-sales-summary';
 
     public static function getNavigationGroup(): ?string
     {
@@ -58,34 +58,33 @@ class InstallmentSalesSummary extends Page implements HasTable
         ];
     }
 
-    // THIS is the correct method for syncing filter and property!
     public function updatedTableFilters($filters): void
-{
-    if (is_array($filters) && isset($filters['month_filter']['value'])) {
-        $this->selectedMonth = $filters['month_filter']['value'];
-        $this->refresh(); // <--- This will re-render the page & widgets.
+    {
+        if (is_array($filters) && isset($filters['month_filter']['value'])) {
+            $this->selectedMonth = $filters['month_filter']['value'];
+            $this->refresh();
+        }
     }
-}
 
     protected function getMonthOptions(): array
     {
         $options = [
-            'all_upcoming' => 'All Upcoming',
-            'overdue'      => 'Overdue',
-            'completed'    => 'Completed',
+            'all_upcoming' => __('All Upcoming'),
+            'overdue'      => __('Overdue'),
+            'completed'    => __('Completed'),
         ];
 
         for ($i = -1; $i <= 7; $i++) {
-            $date  = now()->copy()->addMonths($i)->startOfMonth();
-            $key   = $date->format('Y-m');
+            $date = now()->copy()->addMonths($i)->startOfMonth();
+            $key = $date->format('Y-m');
             $label = $date->translatedFormat('F Y');
             if ($i === 0) {
-                $label .= ' (Current)';
+                $label .= ' (' . __('Current') . ')';
             }
             $options[$key] = $label;
         }
 
-        $options['all'] = 'All Sales';
+        $options['all'] = __('All Sales');
         return $options;
     }
 
@@ -124,65 +123,47 @@ class InstallmentSalesSummary extends Page implements HasTable
     {
         return [
             TextColumn::make('client.name')
-                ->label('Client')
+                ->label(__('Client'))
                 ->sortable()
                 ->searchable(),
 
             TextColumn::make('monthly_installment')
-                ->label('Installment')
-                ->money('EGP')
+                ->label(__('Installment'))
+                ->getStateUsing(fn (Sale $record) => number_format($record->monthly_installment, 2))
+                ->suffix(__('EGP'))
                 ->sortable(),
 
-            // Add this column to show "Due Amount"
-TextColumn::make('current_month_due')
-    ->label('Due Amount')
-    ->getStateUsing(
-        fn (Sale $record): string => number_format(
-            $record->getPaymentScheduleProgress()['next_payment_due'],
-            2
-        )
-    )
-    ->suffix(' جم')
-    ->color('blue'),
+            TextColumn::make('current_month_due')
+                ->label(__('Due Amount'))
+                ->getStateUsing(fn (Sale $record) => number_format($record->getPaymentScheduleProgress()['next_payment_due'], 2))
+                ->suffix(__('جم'))
+                ->color('blue'),
 
-TextColumn::make('profit')
-    ->label('Profit on Due Amount')
-    ->getStateUsing(
-        fn (Sale $record): string => number_format(
-            $record->getProfitOnDueAmount(),
-            2
-        )
-    )
-    ->suffix(' جم')
-    ->color('green'),
-
-
+            TextColumn::make('profit')
+                ->label(__('Profit on Due Amount'))
+                ->getStateUsing(fn (Sale $record) => number_format($record->getProfitOnDueAmount(), 2))
+                ->suffix(__('جم'))
+                ->color('green'),
 
             TextColumn::make('capital_due')
-    ->label('Capital on Due Amount')
-    ->getStateUsing(
-        fn (Sale $record): string => number_format(
-            $record->getCapitalOnDueAmount(),
-            2
-        )
-    )
-    ->suffix(' جم')
-    ->color('gray'),
-
+                ->label(__('Capital on Due Amount'))
+                ->getStateUsing(fn (Sale $record) => number_format($record->getCapitalOnDueAmount(), 2))
+                ->suffix(__('جم'))
+                ->color('gray'),
 
             TextColumn::make('next_payment_date')
-                ->label('Due Date')
+                ->label(__('Due Date'))
                 ->date()
                 ->sortable(),
 
             TextColumn::make('status')
-                ->label('Status')
+                ->label(__('Status'))
                 ->getStateUsing(fn (Sale $record) => match (true) {
-                    str_starts_with($record->dynamic_status, 'Partial') => '🟡 ' . $record->dynamic_status,
-                    $record->dynamic_status === 'completed'           => '✅ Completed',
-                    $record->dynamic_status === 'danger'              => '❌ Overdue',
-                    $record->dynamic_status === 'orange'              => '⚠️ Late',
-                    default                                            => '🟢 On Track',
+                    str_starts_with($record->dynamic_status, 'Partial') => '🟡 ' . __('Partial'),
+                    $record->dynamic_status === 'completed'           => '✅ ' . __('Completed'),
+                    $record->dynamic_status === 'danger'              => '❌ ' . __('Overdue'),
+                    $record->dynamic_status === 'orange'              => '⚠️ ' . __('Late'),
+                    default                                            => '🟢 ' . __('On Track'),
                 }),
         ];
     }
@@ -191,7 +172,7 @@ TextColumn::make('profit')
     {
         return [
             SelectFilter::make('month_filter')
-                ->label('By Due Month')
+                ->label(__('By Due Month'))
                 ->options($this->getMonthOptions())
                 ->default($this->selectedMonth)
                 ->query(fn (Builder $query, array $data) =>

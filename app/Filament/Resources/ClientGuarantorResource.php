@@ -20,6 +20,11 @@ class ClientGuarantorResource extends Resource
         return __('Clients Management');
     }
 
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Clients Management');
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([

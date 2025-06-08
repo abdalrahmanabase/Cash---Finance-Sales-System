@@ -21,11 +21,6 @@ class ProductResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-cube';
     protected static ?string $navigationGroup = 'Products Management';
 
-     public static function getNavigationGroup(): ?string
-    {
-        return __('Products Management');
-    }
-
     public static function form(Form $form): Form
     {
         return $form->schema([

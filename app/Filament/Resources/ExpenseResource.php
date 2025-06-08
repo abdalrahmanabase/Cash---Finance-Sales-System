@@ -22,7 +22,8 @@ class ExpenseResource extends Resource
     protected static ?string $navigationLabel = 'Expenses';
     protected static ?string $navigationGroup = 'Financial Management';
 
-     public static function getNavigationLabel(): string
+
+    public static function getNavigationLabel(): string
     {
         return __('Expenses');
     }

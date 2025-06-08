@@ -14,13 +14,5 @@ class FinancialOverview extends Page
     protected static ?string $navigationLabel = 'Financial Overview';
     protected static ?string $navigationGroup = 'Financial Management';
 
-public static function getNavigationLabel(): string
-    {
-        return __('Financial Overview');
-    }
 
-    public static function getNavigationGroup(): ?string
-    {
-        return __('Financial Management');
-    }
 }

@@ -32,16 +32,6 @@ class InstallmentSaleResource extends Resource
     protected static ?string $navigationLabel = 'Installment Sales';
     protected static ?string $slug = 'sales/installment';
 
-     public static function getNavigationLabel(): string
-    {
-        return __('Installment Sales');
-    }
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('Sales Management');
-    }
-
     public static function form(Form $form): Form
     {
         return $form

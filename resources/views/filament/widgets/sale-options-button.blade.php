@@ -7,7 +7,7 @@
             icon="heroicon-o-currency-dollar"
             class="w-full justify-center py-6 text-size-lg"
         >
-            New Cash Sale
+            {{ __('New Cash Sale') }}
         </x-filament::button>
     
         <x-filament::button
@@ -17,7 +17,7 @@
             icon="heroicon-o-credit-card"
             class="w-full justify-center py-6 text-size-lg"
         >
-            New Installment Sale
+            {{ __('New Installment Sale') }}
         </x-filament::button>
     </div>
 </x-filament::widget>

@@ -1,18 +1,18 @@
 {{-- filepath: resources/views/filament/pages/inventory.blade.php --}}
 <x-filament::page>
     <div class="mb-8">
-        <h2 class="text-2xl font-bold tracking-tight mb-2 dark:text-white">Inventory Overview</h2>
+        <h2 class="text-2xl font-bold tracking-tight mb-2 dark:text-white">{{ __('Inventory Overview') }}</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col items-center">
-                <span class="text-gray-500 dark:text-gray-300">Total Products</span>
+                <span class="text-gray-500 dark:text-gray-300">{{ __('Total Products') }}</span>
                 <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">{{ $products->count() }}</span>
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col items-center">
-                <span class="text-gray-500 dark:text-gray-300">Total Stock</span>
+                <span class="text-gray-500 dark:text-gray-300">{{ __('Total Stock') }}</span>
                 <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">{{ $products->sum('stock') }}</span>
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col items-center">
-                <span class="text-gray-500 dark:text-gray-300">Inventory Value</span>
+                <span class="text-gray-500 dark:text-gray-300">{{ __('Inventory Value') }}</span>
                 <span class="text-2xl font-bold text-green-600 dark:text-green-400">EGP {{ number_format($totalValue,0) }}</span>
             </div>
         </div>
@@ -20,10 +20,10 @@
 
     <div class="mb-4 flex flex-wrap gap-2">
         <x-filament::button id="showLowStockBtn" color="warning">
-            Show Low Stock Products
+            {{ __('Show Low Stock Products') }}
         </x-filament::button>
         <x-filament::button id="showAllBtn" color="primary" class="hidden">
-            Show All Products
+            {{ __('Show All Products') }}
         </x-filament::button>
     </div>
 
@@ -31,7 +31,7 @@
     <div class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         {{-- Bar Chart --}}
         <div class="flex flex-col items-center w-full">
-            <h3 class="text-lg font-semibold mb-2 dark:text-white" id="chartTitleBar">Top 10 Products by Stock</h3>
+            <h3 class="text-lg font-semibold mb-2 dark:text-white" id="chartTitleBar">{{ __('Top 10 Products by Stock') }}</h3>
             <div class="w-full flex justify-center">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full" style="max-width: 480px;">
                     <canvas id="stockChartBar" style="width:100%;max-width:440px;height:300px;"></canvas>
@@ -40,7 +40,7 @@
         </div>
         {{-- Doughnut Chart --}}
         <div class="flex flex-col items-center w-full">
-            <h3 class="text-lg font-semibold mb-2 dark:text-white" id="chartTitleDoughnut">Stock Distribution by Category</h3>
+            <h3 class="text-lg font-semibold mb-2 dark:text-white" id="chartTitleDoughnut">{{ __('Stock Distribution by Category') }}</h3>
             <div class="w-full flex justify-center">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full" style="max-width: 480px;">
                     <canvas id="stockChartDoughnut" style="width:100%;max-width:440px;height:300px;"></canvas>
@@ -53,11 +53,11 @@
         <table class="filament-tables-table w-full text-sm" id="productsTable">
             <thead>
                 <tr class="bg-gray-50 dark:bg-gray-700">
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">Product</th>
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">Category</th>
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">Stock</th>
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">Purchase Price</th>
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">Total Value</th>
+                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">{{ __('Product') }}</th>
+                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">{{ __('Category') }}</th>
+                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">{{ __('Stock') }}</th>
+                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">{{ __('Purchase Price') }}</th>
+                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">{{ __('Total Value') }}</th>
                 </tr>
             </thead>
             <tbody id="productsTableBody"></tbody>
@@ -129,7 +129,7 @@
             const tbody = document.getElementById('productsTableBody');
             tbody.innerHTML = '';
             if (products.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-300">No products found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-300">{{ __('No products found.') }}</td></tr>`;
                 return;
             }
             products.forEach(product => {

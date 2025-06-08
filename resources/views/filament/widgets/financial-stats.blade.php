@@ -10,19 +10,19 @@
     
         <div class="breakdown-section">
             <h3 class="section-title">
-                Payments Breakdown for {{ $periodLabel }}
+                {{ __('Payments Breakdown for') }} {{ $periodLabel }}
             </h3>
             <div class="table-wrapper">
                 <table class="table">
                     <thead class="table-header">
                         <tr>
-                            <th class="table-header-cell">Sale #</th>
-                            <th class="table-header-cell">Client</th>
-                            <th class="table-header-cell">Date</th>
-                            <th class="table-header-cell">Type</th>
-                            <th class="table-header-cell">Amount Paid</th>
-                            <th class="table-header-cell">Capital</th>
-                            <th class="table-header-cell">Profit</th>
+                              <th class="table-header-cell">{{ __('Sale #') }}</th>
+                              <th class="table-header-cell">{{ __('Client') }}</th>
+                              <th class="table-header-cell">{{ __('Date') }}</th>
+                              <th class="table-header-cell">{{ __('Type') }}</th>
+                              <th class="table-header-cell">{{ __('Amount Paid') }}</th>
+                              <th class="table-header-cell">{{ __('Capital') }}</th>
+                              <th class="table-header-cell">{{ __('Profit') }}</th>
                         </tr>
                     </thead>
                     <tbody class="table-body">
@@ -53,7 +53,7 @@
                         @empty
                             <tr class="table-row">
                                 <td class="table-cell empty-cell" colspan="7">
-                                    No data for this period.
+                                      {{ __('No data for this period.') }}
                                 </td>
                             </tr>
                         @endforelse

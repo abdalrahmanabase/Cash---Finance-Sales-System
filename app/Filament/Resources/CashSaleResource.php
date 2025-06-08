@@ -24,8 +24,7 @@ class CashSaleResource extends Resource
 {
     protected static ?string $model = Sale::class;
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
-    protected static ?string $navigationGroup = 'Sales Management';
-    protected static ?string $navigationLabel = 'Cash Sales';
+    
     protected static ?string $slug = 'sales/cash';
 
     public static function getNavigationLabel(): string

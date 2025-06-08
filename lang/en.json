@@ -90,5 +90,18 @@
   "Top 5 Products by Stock": "Top 5 Products by Stock",
   "Weekly Sales": "Weekly Sales",
   "Sales": "Sales",
-  "Items in Sale": "Items in Sale"
+  "Items in Sale": "عناصر البيع",
+  "Cash": "نقدي",
+  "Installment": "تقسيط",
+  "Down Payment": "دفعة مقدمة",
+  "Product Information": "Product Information",
+  "Current Stock": "Current Stock",
+  "Pricing": "Pricing",
+  "Profit (Auto)": "Profit (Auto)",
+  "Profit %": "Profit %",
+  "Stock Status": "Stock Status",
+  "Add Stock": "Add Stock",
+  "Quantity to Add": "Quantity to Add",
+  "In Stock": "In Stock",
+  "Out of Stock": "Out of Stock"
 }

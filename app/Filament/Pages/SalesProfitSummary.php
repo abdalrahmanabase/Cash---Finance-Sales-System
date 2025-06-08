@@ -23,8 +23,6 @@ class SalesProfitSummary extends Page implements HasTable
 
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
     protected static string $view = 'filament.pages.sales-profit-summary';
-    protected static ?string $title = 'Cash Sales Profit Summary';
-    protected static ?string $navigationGroup = 'Sales Management';
 
     public static function getNavigationGroup(): ?string
     {

@@ -19,12 +19,15 @@ class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
     protected static ?string $navigationIcon = 'heroicon-o-cube';
-    protected static ?string $navigationGroup = 'Products Management';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Products Management');
+    }
 
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Section::make('Product Information')->schema([
+            Section::make(__('Product Information'))->schema([
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255)
@@ -52,10 +55,10 @@ class ProductResource extends Resource
                     ->numeric()
                     ->minValue(0)
                     ->default(0)
-                    ->label('Current Stock'),
+                    ->label(__('Current Stock')),
             ])->columns(3),
 
-            Section::make('Pricing')
+            Section::make(__('Pricing'))
             ->schema([
                 TextInput::make('purchase_price')
                     ->required()
@@ -94,14 +97,14 @@ class ProductResource extends Resource
                     ->disabled()
                     ->numeric()
                     ->prefix('EGP')
-                    ->label('Profit (Auto)')
+                    >label(__('Profit (Auto)'))
                     ->default(0),
         
                 TextInput::make('profit_percentage')
                     ->disabled()
                     ->numeric()
                     ->suffix('%')
-                    ->label('Profit %')
+                    ->label(__('Profit %'))
                     ->default(0),
             ])
             ->columns(3),
@@ -150,13 +153,13 @@ class ProductResource extends Resource
 
                 TextColumn::make('stock')
                     ->sortable()
-                    ->label('Stock')
+                    ->label(__('Stock'))
                     ->numeric()
                     ->color(fn ($record) => $record->stock > 0 ? 'success' : 'danger')
                     ->weight('bold'),
 
                 IconColumn::make('is_active')
-                    ->label('Active')
+                    ->label(__('Active'))
                     ->boolean()
                     ->state(fn ($record) => $record->stock > 0)
                     ->trueIcon('heroicon-o-check-circle')
@@ -176,10 +179,10 @@ class ProductResource extends Resource
                     ->preload(),
 
                 Tables\Filters\TernaryFilter::make('in_stock')
-                    ->label('Stock Status')
-                    ->placeholder('All')
-                    ->trueLabel('In Stock')
-                    ->falseLabel('Out of Stock')
+                    ->label(__('Stock Status'))
+                    ->placeholder(__('All'))
+                    ->trueLabel(__('In Stock'))
+                    ->falseLabel(__('Out of Stock'))
                     ->queries(
                         true: fn ($query) => $query->where('stock', '>', 0),
                         false: fn ($query) => $query->where('stock', '<=', 0),
@@ -189,7 +192,7 @@ class ProductResource extends Resource
                 Tables\Actions\EditAction::make(),
 
                 Action::make('addStock')
-                    ->label('Add Stock')
+                    ->label(__('Add Stock'))
                     ->icon('heroicon-o-plus')
                     ->color('success')
                     ->form([
@@ -197,7 +200,7 @@ class ProductResource extends Resource
                             ->required()
                             ->numeric()
                             ->minValue(1)
-                            ->label('Quantity to Add')
+                            ->label(__('Quantity to Add'))
                     ])
                     ->action(fn (Product $record, array $data) => $record->increment('stock', $data['quantity']))
                     ->visible(fn ($record) => $record->exists),

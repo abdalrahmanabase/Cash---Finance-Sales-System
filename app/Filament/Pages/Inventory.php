@@ -9,7 +9,10 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 class Inventory extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
-    protected static ?string $navigationGroup = 'Products Management';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Products Management');
+    }
     protected static string $view = 'filament.pages.inventory';
 
     public $products;

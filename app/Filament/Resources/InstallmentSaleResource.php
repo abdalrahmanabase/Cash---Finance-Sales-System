@@ -28,9 +28,19 @@ class InstallmentSaleResource extends Resource
 {
     protected static ?string $model = Sale::class;
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
-    protected static ?string $navigationGroup = 'Sales Management';
-    protected static ?string $navigationLabel = 'Installment Sales';
+    
     protected static ?string $slug = 'sales/installment';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('installment Sales');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Sales Management');
+    }
+
 
     public static function form(Form $form): Form
     {

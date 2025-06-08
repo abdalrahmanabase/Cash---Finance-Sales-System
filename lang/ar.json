@@ -85,7 +85,7 @@
   "All Time": "طوال المدة",
 "This Year": "هذا العام",
   "Cash Sales": "المبيعات النقدية",
-  "Installment Sales": "مبيعات التقسيط",
+  "installment Sales": "مبيعات التقسيط",
   "Payments Table": "جدول المدفوعات",
   "Expenses": "المصروفات",
   "Installment Calculator": "حاسبة التقسيط",
@@ -126,5 +126,18 @@
   "Top 5 Products by Stock": "أعلى 5 منتجات حسب المخزون",
   "Weekly Sales": "مبيعات الأسبوع",
   "Sales": "المبيعات",
-  "Items in Sale": "عناصر البيع"
+  "Items in Sale": "عناصر البيع",
+  "Cash": "نقدي",
+  "Installment": "تقسيط",
+  "Down Payment": "دفعة مقدمة",
+  "Product Information": "معلومات المنتج",
+  "Current Stock": "المخزون الحالي",
+  "Pricing": "التسعير",
+  "Profit (Auto)": "الربح (تلقائي)",
+  "Profit %": "نسبة الربح",
+  "Stock Status": "حالة المخزون",
+  "Add Stock": "إضافة مخزون",
+  "Quantity to Add": "الكمية المراد إضافتها",
+  "In Stock": "متوفر في المخزون",
+  "Out of Stock": "غير متوفر في المخزون"
 }

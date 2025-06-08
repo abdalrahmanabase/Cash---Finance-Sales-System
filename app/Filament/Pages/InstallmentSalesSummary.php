@@ -20,8 +20,6 @@ class InstallmentSalesSummary extends Page implements HasTable
 
     protected static ?string $navigationIcon  = 'heroicon-o-chart-bar';
     protected static string  $view            = 'filament.pages.installment-sales-summary';
-    protected static ?string $title           = 'Installment Payments Summary';
-    protected static ?string $navigationGroup = 'Sales Management';
 
     public static function getNavigationGroup(): ?string
     {

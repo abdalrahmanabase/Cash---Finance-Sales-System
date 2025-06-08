@@ -16,7 +16,7 @@
                 <table class="table">
                     <thead class="table-header">
                         <tr>
-                              <th class="table-header-cell">{{ __('Sale #') }}</th>
+                              <th class="table-header-cell">{{ __('ID #') }}</th>
                               <th class="table-header-cell">{{ __('Client') }}</th>
                               <th class="table-header-cell">{{ __('Date') }}</th>
                               <th class="table-header-cell">{{ __('Type') }}</th>

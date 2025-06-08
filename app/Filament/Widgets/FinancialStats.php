@@ -21,7 +21,7 @@ class FinancialStats extends StatsOverviewWidget
         $periodKey = $this->period ?? 'all_time';
 
         if ($periodKey === 'all_time') {
-            $label       = 'All Time';
+            $label       = __('All Time');
             $filterFn    = fn($d) => true;
         } elseif ($periodKey === 'this_year') {
             $label    = $now->year;
@@ -29,13 +29,13 @@ class FinancialStats extends StatsOverviewWidget
         } elseif (preg_match('/^(\d{4})-(\d{2})$/', $periodKey, $m)) {
             $year     = (int)$m[1];
             $month    = (int)$m[2];
-            $label    = Carbon::create($year, $month)->format('F Y');
+            $label    = Carbon::create($year, $month)->translatedFormat('F Y');
             $filterFn = fn($d) => (
                 Carbon::parse($d)->year === $year
              && Carbon::parse($d)->month === $month
             );
         } else {
-            $label    = 'All Time';
+            $label    = __('All Time');
             $filterFn = fn($d) => true;
         }
         $this->periodLabel = $label;
@@ -66,7 +66,7 @@ class FinancialStats extends StatsOverviewWidget
                     'sale_id'     => $sale->id,
                     'client'      => optional($sale->client)->name ?? '—',
                     'date'        => $sale->created_at->format('Y-m-d'),
-                    'type'        => 'Cash',
+                    'type'        => __('Cash'),
                     'amount_paid' => $finalPrice,
                     'capital'     => (int) round($capital),
                     'profit'      => (int) round($profit),
@@ -86,7 +86,7 @@ class FinancialStats extends StatsOverviewWidget
                             'sale_id'     => $sale->id,
                             'client'      => optional($sale->client)->name ?? '—',
                             'date'        => $downDate,
-                            'type'        => 'Down Payment',
+                            'type'        => __('Down Payment'),
                             'amount_paid' => (int) round($downPayment),
                             'capital'     => (int) round($downPayment),
                             'profit'      => 0,
@@ -119,7 +119,7 @@ class FinancialStats extends StatsOverviewWidget
                             'sale_id'     => $sale->id,
                             'client'      => optional($sale->client)->name ?? '—',
                             'date'        => Carbon::parse($d)->format('Y-m-d'),
-                            'type'        => 'Installment',
+                            'type'        => __('Installment'),
                             'amount_paid' => (int) round($amt),
                             'capital'     => (int) round($capitalPart),
                             'profit'      => (int) round($profitPart),
@@ -147,26 +147,25 @@ class FinancialStats extends StatsOverviewWidget
         $netProfit = (int) round($totalProfit - $totalExpenses);
         $this->explainRows = $rows;
 
-        return [
-            Card::make('Revenue',     number_format($totalRevenue, 0) . ' EGP')
-                ->description("All cash & paid installments for {$label}")
+         return [
+            Card::make(__('Revenue'),     number_format($totalRevenue, 0) . ' EGP')
+                ->description(__('All cash & paid installments for :label', ['label' => $label]))
                 ->color('success'),
 
-            Card::make('Capital',     number_format($totalCapital, 0) . ' EGP')
-                ->description("Capital portion of payments for {$label}")
+            Card::make(__('Capital'),     number_format($totalCapital, 0) . ' EGP')
+                ->description(__('Capital portion of payments for :label', ['label' => $label]))
                 ->color('danger'),
 
-            Card::make('Profit',      number_format($totalProfit, 0) . ' EGP')
-                ->description("Profit portion of paid amounts for {$label}")
+            Card::make(__('Profit'),      number_format($totalProfit, 0) . ' EGP')
+                ->description(__('Profit portion of paid amounts for :label', ['label' => $label]))
                 ->color('primary'),
 
-            Card::make('Expenses',    number_format($totalExpenses, 0) . ' EGP')
-                ->description("Total expenses for {$label}. Paid For Owner: "
-                    . number_format($ownerPaidExpenses, 0) . ' EGP')
+            Card::make(__('Expenses'),    number_format($totalExpenses, 0) . ' EGP')
+                ->description(__('Total expenses for :label. Paid For Owner: :amount EGP', ['label' => $label, 'amount' => number_format($ownerPaidExpenses, 0)]))
                 ->color('warning'),
 
-            Card::make('Net Profit',  number_format($netProfit, 0) . ' EGP')
-                ->description("Profit − Expenses for {$label}")
+            Card::make(__('Net Profit'),  number_format($netProfit, 0) . ' EGP')
+                ->description(__('Profit - Expenses for :label', ['label' => $label]))
                 ->color('success'),
         ];
     }

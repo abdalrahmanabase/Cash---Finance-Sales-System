@@ -20,6 +20,16 @@ class PaymentResource extends Resource
     protected static ?string $navigationGroup = 'Clients Management';
     protected static ?string $navigationLabel = 'Payments Table';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('Payments Table');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Clients Management');
+    }
+
     public static function table(Table $table): Table
     {
         return $table

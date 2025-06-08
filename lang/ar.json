@@ -34,8 +34,8 @@
   "Saved.": "تم الحفظ.",
   "This is a secure area of the application. Please confirm your password before continuing.": "هذه منطقة آمنة من التطبيق. يرجى تأكيد كلمة المرور قبل المتابعة.",
   "Update Password": "تحديث كلمة المرور",
-  "Your email address is unverified.": "عنوان بريدك الإلكتروني غير مؤكد."
-  ,"Filter by Client:": "تصفية حسب العميل:",
+  "Your email address is unverified.": "عنوان بريدك الإلكتروني غير مؤكد.",
+  "Filter by Client:": "تصفية حسب العميل:",
   "All": "الكل",
   "All Payments": "جميع الدفعات",
   "Client": "العميل",
@@ -83,5 +83,18 @@
   "No data for this period.": "لا توجد بيانات لهذه الفترة.",
   "Period:": "الفترة:",
   "All Time": "طوال المدة",
-  "This Year": "هذا العام"
+  "This Year": "هذا العام",
+  "Cash Sales": "المبيعات النقدية",
+  "Installment Sales": "مبيعات التقسيط",
+  "Payments Table": "جدول المدفوعات",
+  "Expenses": "المصروفات",
+  "Installment Calculator": "حاسبة التقسيط",
+  "Financial Overview": "نظرة عامة مالية",
+  "Inventory": "المخزون",
+  "Installment Payments Summary": "ملخص مدفوعات التقسيط",
+  "Clients Management": "إدارة العملاء",
+  "Sales Management": "إدارة المبيعات",
+  "Financial Management": "الإدارة المالية",
+  "Products Management": "إدارة المنتجات",
+  "User Management": "إدارة المستخدمين"
 }

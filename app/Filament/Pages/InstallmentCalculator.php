@@ -15,7 +15,17 @@ class InstallmentCalculator extends Page implements HasForms
     protected static string $view = 'filament.pages.installment-calculator';
     protected static ?string $navigationLabel = 'Installment Calculator';
     protected static ?string $title = 'Installment Calculator';
-    protected static ?int $navigationSort = 1; 
+    protected static ?int $navigationSort = 1;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('Installment Calculator');
+    }
+
+    public function getTitle(): string
+    {
+        return __('Installment Calculator');
+    }
 
     public $productPrice = null;
 public $downpayment = null;

@@ -70,6 +70,7 @@ UserMenuItem::make()
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
+                \App\Http\Middleware\SetLocale::class,
                 StartSession::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,

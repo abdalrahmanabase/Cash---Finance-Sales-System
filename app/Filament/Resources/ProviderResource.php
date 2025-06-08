@@ -19,7 +19,7 @@ class ProviderResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Products Management';
+        return __('Products Management');
     }
 
     public static function form(Form $form): Form

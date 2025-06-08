@@ -16,6 +16,11 @@ class ClientGuarantorResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-user';
     protected static ?string $navigationGroup = 'Clients Management';
 
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Clients Management');
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([

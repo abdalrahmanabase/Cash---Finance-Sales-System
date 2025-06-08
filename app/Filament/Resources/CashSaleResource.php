@@ -28,6 +28,16 @@ class CashSaleResource extends Resource
     protected static ?string $navigationLabel = 'Cash Sales';
     protected static ?string $slug = 'sales/cash';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('Cash Sales');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Sales Management');
+    }
+
     public static function form(Form $form): Form
     {
         return $form

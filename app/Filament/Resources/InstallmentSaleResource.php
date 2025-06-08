@@ -33,7 +33,7 @@ class InstallmentSaleResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('installment Sales');
+        return __('Installment Sales');
     }
 
     public static function getNavigationGroup(): ?string

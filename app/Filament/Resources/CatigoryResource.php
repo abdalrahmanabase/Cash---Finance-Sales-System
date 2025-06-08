@@ -17,7 +17,7 @@ class CatigoryResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Products Management';
+        return __('Products Management');
     }
 
     public static function shouldRegisterNavigation(): bool

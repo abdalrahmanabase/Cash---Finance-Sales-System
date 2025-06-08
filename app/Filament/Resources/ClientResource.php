@@ -21,6 +21,21 @@ class ClientResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-user';
     protected static ?string $navigationGroup = 'Clients Management';
 
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Clients Management');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Client');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Clients');
+    }
+
     public static function form(Form $form): Form
     {
         return $form

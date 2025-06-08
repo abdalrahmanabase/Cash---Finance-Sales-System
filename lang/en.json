@@ -47,5 +47,18 @@
   "No data for this period.": "No data for this period.",
   "Period:": "Period:",
   "All Time": "All Time",
-  "This Year": "This Year"
+  "This Year": "This Year",
+  "Cash Sales": "Cash Sales",
+  "Installment Sales": "Installment Sales",
+  "Payments Table": "Payments Table",
+  "Expenses": "Expenses",
+  "Installment Calculator": "Installment Calculator",
+  "Financial Overview": "Financial Overview",
+  "Inventory": "Inventory",
+  "Installment Payments Summary": "Installment Payments Summary",
+  "Clients Management": "Clients Management",
+  "Sales Management": "Sales Management",
+  "Financial Management": "Financial Management",
+  "Products Management": "Products Management",
+  "User Management": "User Management"
 }

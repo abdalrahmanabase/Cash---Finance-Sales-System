@@ -23,6 +23,16 @@ class InstallmentSalesSummary extends Page implements HasTable
     protected static ?string $title           = 'Installment Payments Summary';
     protected static ?string $navigationGroup = 'Sales Management';
 
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Sales Management');
+    }
+
+    public function getTitle(): string
+    {
+        return __('Installment Payments Summary');
+    }
+
     public function mount(): void
     {
         $currentMonth = now()->format('Y-m');

@@ -12,6 +12,16 @@ class Inventory extends Page
     protected static ?string $navigationGroup = 'Products Management';
     protected static string $view = 'filament.pages.inventory';
 
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Products Management');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('Inventory');
+    }
+
     public $products;
     public $totalValue;
     public $topProducts;

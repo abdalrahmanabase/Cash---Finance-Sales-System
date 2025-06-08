@@ -26,6 +26,16 @@ class SalesProfitSummary extends Page implements HasTable
     protected static ?string $title = 'Cash Sales Profit Summary';
     protected static ?string $navigationGroup = 'Sales Management';
 
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Sales Management');
+    }
+
+    public function getTitle(): string
+    {
+        return __('Cash Sales Profit Summary');
+    }
+
     protected function getHeaderWidgets(): array
     {
         return [

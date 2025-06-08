@@ -20,6 +20,16 @@ class ClientInstallmentPayments extends Page
     protected static ?int $navigationSort = 10;
     protected static ?string $title = 'Client Payments';
 
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Clients Management');
+    }
+
+    public function getTitle(): string
+    {
+        return __('Client Payments');
+    }
+
     public $editingPayment = null;
     public $deletingPayment = null;
     public ?array $form = [];

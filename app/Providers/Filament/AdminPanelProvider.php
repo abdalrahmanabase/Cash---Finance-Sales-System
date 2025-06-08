@@ -36,14 +36,14 @@ class AdminPanelProvider extends PanelProvider
             ->path('')
             ->login()
             ->userMenuItems([
-    UserMenuItem::make()
-    ->label('English')
-    ->url(fn (): string => route('lang.switch', 'en'))
-    ,
-UserMenuItem::make()
-    ->label('العربية')
-    ->url(fn (): string => route('lang.switch', 'ar'))
-   ,
+            UserMenuItem::make()
+            ->label('English')
+            ->url(fn (): string => route('lang.switch', 'en'))
+            ,
+            UserMenuItem::make()
+                ->label('العربية')
+                ->url(fn (): string => route('lang.switch', 'ar'))
+            ,
             ])
             ->brandLogo(fn () => view('filament.logo-with-text'))
             ->favicon(asset('favicon-removebg-preview (1).png'))
@@ -72,6 +72,7 @@ UserMenuItem::make()
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
                 AuthenticateSession::class,
+                \App\Http\Middleware\SetLocale::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,

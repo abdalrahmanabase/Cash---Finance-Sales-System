@@ -357,7 +357,7 @@ class Sale extends Model
         if ($this->remaining_amount > 0
             && $this->remaining_amount < $this->monthly_installment
         ) {
-            return 'Partial (EGP ' . number_format($this->current_month_due, 2) . ' due)';
+            return 'Partial (جم ' . number_format($this->current_month_due, 2) . ' due)';
         }
 
         return 'success';

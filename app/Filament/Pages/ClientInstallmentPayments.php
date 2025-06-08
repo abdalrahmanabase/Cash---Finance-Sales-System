@@ -69,7 +69,7 @@ class ClientInstallmentPayments extends Page
                             ->mapWithKeys(fn ($sale) => [
                                 $sale->id => new HtmlString(
                                     'Sale #' . $sale->id .
-                                    ' - ' . number_format($sale->remaining_amount, 2) . ' EGP remaining' .
+                                    ' - ' . number_format($sale->remaining_amount, 2) . ' جم remaining' .
                                     ' (' . $sale->remaining_months . ' months left)'
                                 )
                             ]))
@@ -90,7 +90,7 @@ class ClientInstallmentPayments extends Page
                         }),
 
                     TextInput::make('paymentAmount')
-                        ->label('Payment Amount (EGP)')
+                        ->label('Payment Amount (جم)')
                         ->numeric()
                         ->required()
                         ->minValue(0.01)
@@ -106,7 +106,7 @@ class ClientInstallmentPayments extends Page
                                 return function (string $attribute, $value, $fail) use ($get) {
                                     $sale = Sale::find($get('saleId'));
                                     if ($sale && $value > $sale->remaining_amount) {
-                                        $fail("Payment amount cannot exceed remaining amount of " . number_format($sale->remaining_amount, 2) . " EGP");
+                                        $fail("Payment amount cannot exceed remaining amount of " . number_format($sale->remaining_amount, 2) . " جم");
                                     }
                                 };
                             }
@@ -153,7 +153,7 @@ class ClientInstallmentPayments extends Page
                             foreach ($payments as $payment) {
                                 $history .= '<div class="flex justify-between border-b pb-1">';
                                 $history .= '<span>' . Carbon::parse($payment['date'])->format('d-m-Y') . '</span>';
-                                $history .= '<span class="font-medium">EGP ' . number_format($payment['amount'], 2) . '</span>';
+                                $history .= '<span class="font-medium">جم ' . number_format($payment['amount'], 2) . '</span>';
                                 $history .= '</div>';
                             }
 
@@ -176,7 +176,7 @@ class ClientInstallmentPayments extends Page
                     if ($data['paymentAmount'] > $sale->remaining_amount) {
                         Notification::make()
                             ->title('Payment amount too large')
-                            ->body("Payment cannot exceed remaining amount of " . number_format($sale->remaining_amount, 2) . " EGP")
+                            ->body("Payment cannot exceed remaining amount of " . number_format($sale->remaining_amount, 2) . " جم")
                             ->danger()
                             ->send();
                         return;
@@ -196,8 +196,8 @@ class ClientInstallmentPayments extends Page
                         Notification::make()
                             ->title('Payment Successful')
                             ->body(
-                                "Payment of EGP " . number_format($data['paymentAmount'], 2) . " recorded.\n" .
-                                "Remaining: EGP " . number_format($status['remaining_amount'], 2) . "\n" .
+                                "Payment of جم " . number_format($data['paymentAmount'], 2) . " recorded.\n" .
+                                "Remaining: جم " . number_format($status['remaining_amount'], 2) . "\n" .
                                 "Months paid: " . $progress['fully_paid_months'] . "/" . $sale->months_count
                             )
                             ->success()

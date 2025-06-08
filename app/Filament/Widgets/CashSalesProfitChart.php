@@ -108,7 +108,7 @@ class CashSalesProfitChart extends ChartWidget
             'labels' => array_keys($data),
             'datasets' => [
                 [
-                    'label' => __('Profit (EGP)'),
+                    'label' => __('Profit (جم)'),
                     'data' => array_values($data),
                     'borderColor' => '#10B981',
                     'backgroundColor' => 'rgba(16, 185, 129, 0.2)',

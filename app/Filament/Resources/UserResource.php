@@ -74,7 +74,7 @@ class UserResource extends Resource
                 TextColumn::make('role')->sortable(),
                 TextColumn::make('capital_share')
                 ->sortable()
-                ->formatStateUsing(fn ($state) => 'EGP ' . number_format($state, 0)),
+                ->formatStateUsing(fn ($state) => 'جم ' . number_format($state, 0)),
             ]);
     }
 

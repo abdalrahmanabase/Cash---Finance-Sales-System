@@ -1,42 +1,69 @@
 <div>
+    @push('styles')
+        <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    @endpush
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
         @foreach ($this->getCards() as $card)
             {!! $card->render() !!}
         @endforeach
     </div>
-    <div class="mt-8">
-        <h3 class="font-bold mb-2 text-lg">Payments Breakdown for {{ $periodLabel }}</h3>
-        <div class="overflow-x-auto">
-            <table class="min-w-full border dark:border-gray-600 text-sm">
-                <thead class="bg-gray-100 dark:bg-gray-700">
-                <tr>
-                    <th class="px-3 py-2 border dark:border-gray-600">Sale #</th>
-                    <th class="px-3 py-2 border dark:border-gray-600">Client</th>
-                    <th class="px-3 py-2 border dark:border-gray-600">Date</th>
-                    <th class="px-3 py-2 border dark:border-gray-600">Type</th>
-                    <th class="px-3 py-2 border dark:border-gray-600">Amount Paid</th>
-                    <th class="px-3 py-2 border dark:border-gray-600">Capital</th>
-                    <th class="px-3 py-2 border dark:border-gray-600">Profit</th>
-                </tr>
-                </thead>
-                <tbody>
-                @forelse ($explainRows as $row)
-                    <tr>
-                        <td class="px-3 py-2 border dark:border-gray-600 text-center">{{ $row['sale_id'] }}</td>
-                        <td class="px-3 py-2 border dark:border-gray-600">{{ $row['client'] }}</td>
-                        <td class="px-3 py-2 border dark:border-gray-600">{{ $row['date'] }}</td>
-                        <td class="px-3 py-2 border dark:border-gray-600">{{ $row['type'] }}</td>
-                        <td class="px-3 py-2 border dark:border-gray-600 text-right">{{ number_format($row['amount_paid']) }}</td>
-                        <td class="px-3 py-2 border dark:border-gray-600 text-right">{{ number_format($row['capital']) }}</td>
-                        <td class="px-3 py-2 border dark:border-gray-600 text-right">{{ number_format($row['profit']) }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td class="px-3 py-2 border dark:border-gray-600 text-center" colspan="7">No data for this period.</td>
-                    </tr>
-                @endforelse
-                </tbody>
-            </table>
-        </div>
+    
+        <div class="breakdown-section">
+            <h3 class="section-title">
+                Payments Breakdown for {{ $periodLabel }}
+            </h3>
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead class="table-header">
+                        <tr>
+                            <th class="table-header-cell">Sale #</th>
+                            <th class="table-header-cell">Client</th>
+                            <th class="table-header-cell">Date</th>
+                            <th class="table-header-cell">Type</th>
+                            <th class="table-header-cell">Amount Paid</th>
+                            <th class="table-header-cell">Capital</th>
+                            <th class="table-header-cell">Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-body">
+                        @forelse ($explainRows as $row)
+                            <tr class="table-row">
+                                <td class="table-cell" data-label="Sale #">
+                                    {{ $row['sale_id'] }}
+                                </td>
+                                <td class="table-cell" data-label="Client">
+                                    {{ $row['client'] }}
+                                </td>
+                                <td class="table-cell" data-label="Date">
+                                    {{ $row['date'] }}
+                                </td>
+                                <td class="table-cell" data-label="Type">
+                                    {{ $row['type'] }}
+                                </td>
+                                <td class="table-cell text-right" data-label="Amount Paid">
+                                    {{ number_format($row['amount_paid']) }}
+                                </td>
+                                <td class="table-cell text-right" data-label="Capital">
+                                    {{ number_format($row['capital']) }}
+                                </td>
+                                <td class="table-cell text-right" data-label="Profit">
+                                    {{ number_format($row['profit']) }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr class="table-row">
+                                <td class="table-cell empty-cell" colspan="7">
+                                    No data for this period.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+             <div class="pagination-wrapper">
+                {{ $explainRows->links() }}
+ 
+            </div>
     </div>
 </div>

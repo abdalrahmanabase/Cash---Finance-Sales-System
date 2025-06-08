@@ -7,11 +7,12 @@ use App\Models\Sale;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class FinancialStats extends StatsOverviewWidget
 {
     public string $period = 'all_time';
-    public array $explainRows = [];
+    public  $explainRows = [];
     public string $periodLabel = '';
 
     protected function getCards(): array
@@ -171,14 +172,32 @@ class FinancialStats extends StatsOverviewWidget
     }
 
     public function render(): \Illuminate\Contracts\View\View
-    {
+{
+    // 1) Build your raw explainRows array
+    $this->getCards();
 
-        
-        $this->getCards();
+    // 2) Paginate it
+    $perPage    = 10;
+    $page       = (int) request()->get('page', 1);
+    $collection = collect($this->explainRows);
+    $paginator  = new LengthAwarePaginator(
+        $collection->forPage($page, $perPage),
+        $collection->count(),
+        $perPage,
+        $page,
+        [
+            'path'  => request()->url(),
+            'query' => request()->query(),
+        ]
+    );
 
-        return view('filament.widgets.financial-stats', [
-            'explainRows' => $this->explainRows,
-            'periodLabel' => $this->periodLabel,
-        ]);
-    }
+    // 3) Now that $this->explainRows is untyped (or a union), this works:
+    $this->explainRows = $paginator;
+
+    // 4) Render—Livewire will expose $explainRows to Blade
+    return view('filament.widgets.financial-stats', [
+        'periodLabel' => $this->periodLabel,
+    ]);
+}
+
 }

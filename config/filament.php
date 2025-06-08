@@ -98,4 +98,12 @@ return [
 
     'system_route_prefix' => 'filament',
 
+    'styles' => [
+        'css/style.css',
+    ],
+
+    'scripts' => [
+        'js/table-labels.js',
+    ],
+
 ];

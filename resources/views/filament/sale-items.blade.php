@@ -1,6 +1,6 @@
 <div class="space-y-4">
     <div class="border-b pb-2">
-        <h3 class="text-lg font-medium">Items in Sale</h3>
+        <h3 class="text-lg font-medium">{{ __('Items in Sale') }}</h3>
     </div>
     
     <div class="space-y-2">

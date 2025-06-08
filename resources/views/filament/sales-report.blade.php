@@ -8,13 +8,13 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Monthly Sales Chart -->
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Monthly Sales</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ __('Monthly Sales') }}</h3>
             <canvas id="monthlySalesChart" height="300"></canvas>
         </div>
 
         <!-- Sales by Type Chart -->
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Sales by Type</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ __('Sales by Type') }}</h3>
             <canvas id="salesTypeChart" height="300"></canvas>
         </div>
     </div>
@@ -29,7 +29,7 @@
                     data: {
                         labels: @json($this->getMonthlyLabels()),
                         datasets: [{
-                            label: 'Sales Amount',
+                            label: '{{ __('Sales Amount') }}',
                             data: @json($this->getMonthlyData()),
                             borderColor: 'rgb(79, 70, 229)',
                             tension: 0.1,
@@ -42,7 +42,7 @@
                 new Chart(document.getElementById('salesTypeChart'), {
                     type: 'doughnut',
                     data: {
-                        labels: ['Cash Sales', 'Installment Sales'],
+                        labels: ['{{ __('Cash Sales') }}', '{{ __('Installment Sales') }}'],
                         datasets: [{
                             data: [
                                 {{ Sale::where('sale_type', 'cash')->count() }},

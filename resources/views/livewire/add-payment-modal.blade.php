@@ -1,6 +1,6 @@
 <div>
     <x-filament::modal
-        heading="Add Payment"
+        :heading="__('Add Payment')"
         :show="$open"
         @close="$wire.open = false"
         width="md"
@@ -10,7 +10,7 @@
                 <x-filament::input
                     type="number"
                     wire:model="amount"
-                    label="Amount"
+                    label="{{ __('Amount') }}"
                     required
                     step="1"
                 />
@@ -20,12 +20,12 @@
                 <x-filament::input
                     type="text"
                     wire:model="notes"
-                    label="Notes"
+                    label="{{ __('Notes') }}"
                 />
             </x-filament::input.wrapper>
 
             <x-filament::button type="submit">
-                Submit Payment
+                {{ __('Submit Payment') }}
             </x-filament::button>
         </x-filament::form>
     </x-filament::modal>

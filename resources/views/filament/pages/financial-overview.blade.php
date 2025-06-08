@@ -6,8 +6,8 @@
     $period = request()->get('period', $defaultPeriod);
 
     $monthOptions = [
-        'all_time'  => 'All Time',
-        'this_year' => $year . ' (This Year)',
+        'all_time'  => __('All Time'),
+        'this_year' => $year . ' (' . __('This Year') . ')',
     ];
     foreach (range(1, 12) as $m) {
         $keyLabel = $year . '-' . str_pad($m, 2, '0', STR_PAD_LEFT);
@@ -22,7 +22,7 @@
             for="period"
             class="text-sm font-semibold mr-2 text-gray-700 dark:text-gray-300"
         >
-            Period:
+            {{ __('Period:') }}
         </label>
         <select
             name="period"

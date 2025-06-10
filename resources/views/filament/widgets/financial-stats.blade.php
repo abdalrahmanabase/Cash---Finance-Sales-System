@@ -44,13 +44,13 @@
                                 {{ $row['type'] }}
                             </td>
                             <td class="table-cell px-4 py-2 text-right dark:text-gray-100" data-label="{{ __('Amount Paid') }}">
-                                {{ number_format($row['amount_paid']) }}
+                                {{ (int) $row['amount_paid'] }}
                             </td>
                             <td class="table-cell px-4 py-2 text-right dark:text-gray-100" data-label="{{ __('Capital') }}">
-                                {{ number_format($row['capital']) }}
+                                {{ (int) ($row['capital']) }}
                             </td>
                             <td class="table-cell px-4 py-2 text-right dark:text-gray-100" data-label="{{ __('Profit') }}">
-                                {{ number_format($row['profit']) }}
+                                {{ (int) ($row['profit']) }}
                             </td>
                         </tr>
                     @empty

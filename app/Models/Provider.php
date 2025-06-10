@@ -33,7 +33,7 @@ class Provider extends Model
 
       public function getTotalDebtAttribute()
     {
-        $billDebt = $this->bills->sum(fn($bill) => ($bill->total_amount - $bill->amount_paid));
+        $billDebt = $this->bills->sum(fn($bill) => ($bill->total_amount));
         $extraPayments = $this->payments->sum('amount');
         return $billDebt - $extraPayments;
     }

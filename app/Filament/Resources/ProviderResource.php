@@ -74,11 +74,6 @@ class ProviderResource extends Resource
                                 ->numeric()
                                 ->required(),
 
-                            Forms\Components\TextInput::make('amount_paid')
-                                ->label(__('Amount Paid'))
-                                ->numeric()
-                                ->required(),
-
                             Forms\Components\Textarea::make('notes')
                                 ->label(__('Notes'))
                                 ->columnSpanFull(),

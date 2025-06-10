@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('provider_id')->constrained()->onDelete('cascade');
             $table->string('image_path')->nullable();
             $table->decimal('total_amount', 10, 2)->default(0);
-            $table->decimal('amount_paid', 10, 2)->default(0);
             $table->text('notes')->nullable();
             $table->timestamps();
         });

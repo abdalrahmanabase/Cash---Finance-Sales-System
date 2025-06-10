@@ -15,7 +15,6 @@ class ProviderBill extends Model
         'notes',
         'provider_id',
         'total_amount',
-        'amount_paid',
     ];
 
     protected $appends = ['image_url'];

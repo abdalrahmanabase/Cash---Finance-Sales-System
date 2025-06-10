@@ -17,7 +17,7 @@ class CashSalesProfitChart extends ChartWidget
 
     public function getHeading(): string
     {
-        return __('Sales Profit Trend');
+        return __('Cash Sales Profit Trend');
     }
 
     public ?string $filter = 'this_month';

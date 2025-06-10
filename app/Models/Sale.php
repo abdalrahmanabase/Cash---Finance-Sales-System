@@ -31,6 +31,8 @@ class Sale extends Model
         'notes',
         'preferred_payment_day',
         'next_payment_date',
+        'created_at',
+        'updated_at',
     ];
 
     protected $casts = [
@@ -341,27 +343,26 @@ class Sale extends Model
     }
 
     public function getDynamicStatusAttribute(): string
-    {
-        if ($this->status === 'completed') {
-            return 'completed';
-        }
-
-        if ($this->isPaymentOverdue()) {
-            $daysLate = Carbon::now()->diffInDays(
-                Carbon::createFromFormat('d-m-Y', $this->next_payment_date),
-                false
-            );
-            return $daysLate <= -3 ? 'danger' : 'orange';
-        }
-
-        if ($this->remaining_amount > 0
-            && $this->remaining_amount < $this->monthly_installment
-        ) {
-            return 'Partial (جم ' . number_format($this->current_month_due, 2) . ' due)';
-        }
-
-        return 'success';
+{
+    if ($this->status === 'completed') {
+        return 'completed';
     }
+
+    if ($this->isPaymentOverdue()) {
+        // next_payment_date is already a Carbon instance
+        $daysLate = now()->diffInDays($this->next_payment_date, false);
+        return $daysLate <= -3 ? 'danger' : 'orange';
+    }
+
+    if ($this->remaining_amount > 0
+        && $this->remaining_amount < $this->monthly_installment
+    ) {
+        return 'Partial (جم ' . number_format($this->current_month_due, 2) . ' due)';
+    }
+
+    return 'success';
+}
+
 
     public function getPaymentsGroupedByMonth(): array
     {

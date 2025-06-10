@@ -23,7 +23,9 @@ class TopProductsBarChart extends ChartWidget
                 [
                     'label' => __('Stock'),
                     'data' => $products->pluck('stock'),
-                    'backgroundColor' => '#3b82f6',
+                    'backgroundColor' => [
+                        '#3b82f6', '#10b981', '#f59e42', '#ef4444', '#a78bfa',
+                    ],
                 ],
             ],
             'labels' => $products->pluck('name'),

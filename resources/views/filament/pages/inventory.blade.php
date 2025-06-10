@@ -13,7 +13,7 @@
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col items-center">
                 <span class="text-gray-500 dark:text-gray-300">{{ __('Inventory Value') }}</span>
-                <span class="text-2xl font-bold text-green-600 dark:text-green-400">جم {{ number_format($totalValue,0) }}</span>
+                <span class="text-2xl font-bold text-green-600 dark:text-green-400">جم {{ number_format($totalValue, 0) }}</span>
             </div>
         </div>
     </div>
@@ -80,7 +80,7 @@
                 data: {
                     labels: topProducts.map(p => p.name),
                     datasets: [{
-                        label: 'Stock',
+                        label: '{{ __('Stock') }}',
                         data: topProducts.map(p => p.stock),
                         backgroundColor: 'rgba(59, 130, 246, 0.7)',
                         borderColor: 'rgba(59, 130, 246, 1)',
@@ -106,7 +106,7 @@
                 data: {
                     labels: Object.keys(stockByCategory),
                     datasets: [{
-                        label: 'Stock by Category',
+                        label: '{{ __('Stock by Category') }}',
                         data: Object.values(stockByCategory),
                         backgroundColor: [
                             '#3b82f6', '#10b981', '#f59e42', '#ef4444', '#a78bfa', '#f472b6',
@@ -133,7 +133,7 @@
                 return;
             }
             products.forEach(product => {
-                let category = product.category && product.category.name ? product.category.name : 'Uncategorized';
+                let category = product.category && product.category.name ? product.category.name : '{{ __('Uncategorized') }}';
                 tbody.innerHTML += `
                     <tr class="border-b dark:border-gray-700">
                         <td class="px-4 py-2 dark:text-gray-100">${product.name}</td>

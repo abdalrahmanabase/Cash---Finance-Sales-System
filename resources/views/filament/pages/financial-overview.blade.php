@@ -11,7 +11,7 @@
     ];
     foreach (range(1, 12) as $m) {
         $keyLabel = $year . '-' . str_pad($m, 2, '0', STR_PAD_LEFT);
-        $monthOptions[$keyLabel] = $now->copy()->month($m)->format('F') . " $year";
+        $monthOptions[$keyLabel] = $now->copy()->month($m)->translatedFormat('F') . " $year";
     }
 @endphp
 

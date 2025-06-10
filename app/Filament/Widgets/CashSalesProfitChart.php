@@ -8,14 +8,15 @@ use Filament\Widgets\ChartWidget;
 
 class CashSalesProfitChart extends ChartWidget
 {
-    protected static ?string $heading = 'null';
+    protected static ?string $heading = null;
     protected static ?string $maxHeight = '300px';
     protected static ?string $pollingInterval = null;
- public function getHeading(): string
+
+    public function getHeading(): string
     {
         return __('Sales Profit Trend');
     }
-    // Always default filter — no session persistence or external modification
+
     public ?string $filter = 'this_month';
 
     protected function getType(): string
@@ -37,9 +38,8 @@ class CashSalesProfitChart extends ChartWidget
     protected function getData(): array
     {
         $now = Carbon::now();
-        $filter = $this->filter; // Always 'this_month' or what user just picked this render
+        $filter = $this->filter;
 
-        // Time ranges & formatting based on filter
         [$start, $end, $format, $intervalMethod] = match ($filter) {
             'today' => [
                 $now->copy()->startOfDay(),

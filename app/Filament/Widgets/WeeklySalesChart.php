@@ -14,19 +14,21 @@ class WeeklySalesChart extends ChartWidget
     {
         return __('Weekly Sales');
     }
+
     protected static ?string $maxHeight = '300px';
 
     protected function getData(): array
     {
-        $startOfWeek = now()->startOfWeek();
+        $startOfWeek = now()->startOfWeek(Carbon::SATURDAY);
+        $endOfWeek = now()->endOfWeek(Carbon::FRIDAY);
+
         $sales = Sale::where('sale_type', 'cash')
-            ->whereBetween('created_at', [$startOfWeek, now()])
+            ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
             ->get()
-            ->groupBy(fn ($sale) => Carbon::parse($sale->created_at)->format('l'))
+            ->groupBy(fn ($sale) => Carbon::parse($sale->created_at)->translatedFormat('l'))
             ->map(fn ($group) => $group->sum('final_price'));
 
-
-        $labels = collect(Carbon::getDays())->map(fn ($day) => $day);
+        $labels = collect(Carbon::getDays())->map(fn ($day) => Carbon::createFromFormat('l', $day)->translatedFormat('l'));
         $data = $labels->map(fn ($day) => $sales[$day] ?? 0);
 
         return [
@@ -34,6 +36,10 @@ class WeeklySalesChart extends ChartWidget
                 [
                     'label' => __('Sales'),
                     'data' => $data->toArray(),
+                    'borderColor' => '#3b82f6',
+                    'backgroundColor' => 'rgba(59, 130, 246, 0.2)',
+                    'fill' => true,
+                    'tension' => 0.4,
                 ],
             ],
             'labels' => $labels->toArray(),

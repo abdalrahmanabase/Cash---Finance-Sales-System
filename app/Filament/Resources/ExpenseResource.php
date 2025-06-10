@@ -32,6 +32,11 @@ class ExpenseResource extends Resource
         return __('Financial Management');
     }
 
+    protected static function getCurrencySymbol(): string
+    {
+        return app()->getLocale() === 'ar' ? 'جم' : 'EGP';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -57,7 +62,8 @@ class ExpenseResource extends Resource
                     ->required(fn (callable $get) => $get('type') === 'Other'),
 
                 Forms\Components\TextInput::make('amount')
-                    ->label(__('Amount (جم)'))
+                    ->label(__('Amount (:currency)', ['currency' => static::getCurrencySymbol()]))
+
                     ->required()
                     ->numeric()
                     ->minValue(0),
@@ -84,8 +90,9 @@ class ExpenseResource extends Resource
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('amount')
-                    ->label(__('Amount (جم)'))
-                    ->getStateUsing(fn ($record) => number_format($record->amount, 2, '.', ',') . ' جم')
+                    ->label(__('Amount (:currency)', ['currency' => static::getCurrencySymbol()]))
+
+                    ->getStateUsing(fn ($record) => number_format($record->amount, 2, '.', ',') . ' ' . static::getCurrencySymbol())
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('date')

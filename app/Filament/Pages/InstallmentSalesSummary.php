@@ -31,6 +31,11 @@ class InstallmentSalesSummary extends Page implements HasTable
         return __('Installment Payments Summary');
     }
 
+    protected function getCurrencySymbol(): string
+{
+    return app()->getLocale() === 'ar' ? 'جم' : 'EGP';
+}
+
     public function mount(): void
     {
         $currentMonth = now()->format('Y-m');
@@ -130,25 +135,25 @@ class InstallmentSalesSummary extends Page implements HasTable
             TextColumn::make('monthly_installment')
                 ->label(__('Installment'))
                 ->getStateUsing(fn (Sale $record) => number_format($record->monthly_installment, 2))
-                ->suffix(__('EGP'))
+                ->suffix($this->getCurrencySymbol())
                 ->sortable(),
 
             TextColumn::make('current_month_due')
                 ->label(__('Due Amount'))
                 ->getStateUsing(fn (Sale $record) => number_format($record->getPaymentScheduleProgress()['next_payment_due'], 2))
-                ->suffix(__('جم'))
+                ->suffix($this->getCurrencySymbol())
                 ->color('blue'),
 
             TextColumn::make('profit')
                 ->label(__('Profit on Due Amount'))
                 ->getStateUsing(fn (Sale $record) => number_format($record->getProfitOnDueAmount(), 2))
-                ->suffix(__('جم'))
+                ->suffix($this->getCurrencySymbol())
                 ->color('green'),
 
             TextColumn::make('capital_due')
                 ->label(__('Capital on Due Amount'))
                 ->getStateUsing(fn (Sale $record) => number_format($record->getCapitalOnDueAmount(), 2))
-                ->suffix(__('جم'))
+                ->suffix($this->getCurrencySymbol())
                 ->color('gray'),
 
             TextColumn::make('next_payment_date')

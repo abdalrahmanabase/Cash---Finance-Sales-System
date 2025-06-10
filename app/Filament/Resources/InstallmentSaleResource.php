@@ -50,6 +50,11 @@ class InstallmentSaleResource extends Resource
         return __('Installment Sales');
     }
 
+    protected static function getCurrencySymbol(): string
+{
+    return app()->getLocale() === 'ar' ? 'جم' : 'EGP';
+}
+
     public static function form(Form $form): Form
     {
         return $form
@@ -126,7 +131,7 @@ class InstallmentSaleResource extends Resource
                                 TextInput::make('unit_price')
                                     ->label(__('Unit Price'))
                                     ->numeric()
-                                    ->prefix(__('EGP'))
+                                    ->prefix(static::getCurrencySymbol())
                                     ->disabled()
                                     ->dehydrated(),
 
@@ -139,7 +144,7 @@ class InstallmentSaleResource extends Resource
                                 TextInput::make('total')
                                     ->label(__('Item Total'))
                                     ->numeric()
-                                    ->prefix(__('EGP'))
+                                    ->prefix(static::getCurrencySymbol())
                                     ->disabled()
                                     ->dehydrated()
                                     ->afterStateHydrated(function (Get $get, Set $set) {
@@ -210,7 +215,7 @@ class InstallmentSaleResource extends Resource
                         TextInput::make('final_price')
                             ->label(__('Final Price'))
                             ->numeric()
-                            ->prefix(__('EGP'))
+                            ->prefix(static::getCurrencySymbol())
                             ->disabled()
                             ->dehydrated(),
 
@@ -257,7 +262,7 @@ class InstallmentSaleResource extends Resource
                         TextInput::make('interest_amount')
                             ->label(__('Interest Amount'))
                             ->numeric()
-                            ->prefix(__('EGP'))
+                            ->prefix(static::getCurrencySymbol())
                             ->disabled()
                             ->dehydrated(),
 
@@ -276,7 +281,7 @@ class InstallmentSaleResource extends Resource
                             ->numeric()
                             ->step(1)
                             ->rules(['integer'])
-                            ->prefix(__('EGP'))
+                            ->prefix(static::getCurrencySymbol())
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Get $get, Set $set) => static::updateInstallmentFromMonthly($get, $set))
                             ->required(),
@@ -393,7 +398,7 @@ class InstallmentSaleResource extends Resource
 
                 TextColumn::make('final_price')
                     ->label(__('Total Amount'))
-                    ->money('EGP')
+                    ->getStateUsing(fn ($record) => number_format($record->final_price, 2) . ' ' . static::getCurrencySymbol())
                     ->sortable(),
 
                 TextColumn::make('down_payment')
@@ -454,6 +459,7 @@ class InstallmentSaleResource extends Resource
                     ->icon('heroicon-o-eye')
                     ->modalContent(fn (Sale $record) => view('filament.sale-items', [
                         'items' => $record->items()->with('product')->get(),
+                        'currencySymbol' => app()->getLocale() === 'ar' ? 'جم' : 'EGP',
                     ]))
                     ->modalHeading(__('Sale Items')),
             ])

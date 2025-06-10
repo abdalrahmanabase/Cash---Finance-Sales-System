@@ -15,6 +15,11 @@ class InstallmentSalesStats extends BaseWidget
 
     protected static bool $refreshOnWidgetDataChanges = true;
 
+    protected function getCurrencySymbol(): string
+{
+    return app()->getLocale() === 'ar' ? 'جم' : 'EGP';
+}
+
     protected function getStats(): array
     {
         $selectedMonth = $this->selectedMonth ?? now()->format('Y-m');
@@ -80,20 +85,28 @@ class InstallmentSalesStats extends BaseWidget
             return !$isAll && $due->format('Y-m') < $selectedMonth;
         })->sum('remaining_amount');
 
-         return [
-            Stat::make(__('Expected Payment'), number_format($expectedPayment, 2) . ' جم')
-                ->description(__('Expected profit: :profit جم | Capital: :capital جم', ['profit' => number_format($expectedProfit, 2), 'capital' => number_format($expectedCapital, 2)]))
+        return [
+            Stat::make(__('Expected Payment'), number_format($expectedPayment, 2) . ' ' . $this->getCurrencySymbol())
+                ->description(__('Expected profit: :profit :currency | Capital: :capital :currency', [
+                    'profit' => number_format($expectedProfit, 2),
+                    'capital' => number_format($expectedCapital, 2),
+                    'currency' => $this->getCurrencySymbol(),
+                ]))
                 ->color('primary'),
 
-            Stat::make(__('Paid'), number_format($paidThisMonth, 2) . ' جم')
-                ->description(__('Profit: :profit جم | Capital: :capital جم', ['profit' => number_format($paidProfit, 2), 'capital' => number_format($paidCapital, 2)]))
+            Stat::make(__('Paid'), number_format($paidThisMonth, 2) . ' ' . $this->getCurrencySymbol())
+                ->description(__('Profit: :profit :currency | Capital: :capital :currency', [
+                    'profit' => number_format($paidProfit, 2),
+                    'capital' => number_format($paidCapital, 2),
+                    'currency' => $this->getCurrencySymbol(),
+                ]))
                 ->color('success'),
 
-            Stat::make(__('Remaining This Month'), number_format($remainingThisMonth, 2) . ' جم')
+            Stat::make(__('Remaining This Month'), number_format($remainingThisMonth, 2) . ' ' . $this->getCurrencySymbol())
                 ->description(__('Still due for selected period'))
                 ->color('warning'),
 
-            Stat::make(__('Previous Months Unpaid'), number_format($remainingFromPrevious, 2) . ' جم')
+            Stat::make(__('Previous Months Unpaid'), number_format($remainingFromPrevious, 2) . ' ' . $this->getCurrencySymbol())
                 ->description(__('Unpaid from earlier months'))
                 ->color('danger'),
         ];

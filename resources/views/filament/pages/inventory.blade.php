@@ -1,4 +1,3 @@
-{{-- filepath: resources/views/filament/pages/inventory.blade.php --}}
 <x-filament::page>
     <div class="mb-8">
         <h2 class="text-2xl font-bold tracking-tight mb-2 dark:text-white">{{ __('Inventory Overview') }}</h2>
@@ -13,7 +12,9 @@
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col items-center">
                 <span class="text-gray-500 dark:text-gray-300">{{ __('Inventory Value') }}</span>
-                <span class="text-2xl font-bold text-green-600 dark:text-green-400">جم {{ number_format($totalValue, 0) }}</span>
+                <span class="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {{ $currencySymbol }} {{ number_format($totalValue,0) }}
+                </span>
             </div>
         </div>
     </div>
@@ -72,6 +73,8 @@
         const allProducts = {!! $products->toJson() !!};
         const lowStockProducts = {!! $lowStockProducts->toJson() !!};
 
+        const currencySymbol = @json($currencySymbol);
+
         function renderBarChart() {
             if (window.stockChartBarInstance) window.stockChartBarInstance.destroy();
             const ctx = document.getElementById('stockChartBar').getContext('2d');
@@ -80,7 +83,7 @@
                 data: {
                     labels: topProducts.map(p => p.name),
                     datasets: [{
-                        label: '{{ __('Stock') }}',
+                        label: 'Stock',
                         data: topProducts.map(p => p.stock),
                         backgroundColor: 'rgba(59, 130, 246, 0.7)',
                         borderColor: 'rgba(59, 130, 246, 1)',
@@ -106,7 +109,7 @@
                 data: {
                     labels: Object.keys(stockByCategory),
                     datasets: [{
-                        label: '{{ __('Stock by Category') }}',
+                        label: 'Stock by Category',
                         data: Object.values(stockByCategory),
                         backgroundColor: [
                             '#3b82f6', '#10b981', '#f59e42', '#ef4444', '#a78bfa', '#f472b6',
@@ -133,14 +136,14 @@
                 return;
             }
             products.forEach(product => {
-                let category = product.category && product.category.name ? product.category.name : '{{ __('Uncategorized') }}';
+                let category = product.category && product.category.name ? product.category.name : 'Uncategorized';
                 tbody.innerHTML += `
                     <tr class="border-b dark:border-gray-700">
                         <td class="px-4 py-2 dark:text-gray-100">${product.name}</td>
                         <td class="px-4 py-2 dark:text-gray-100">${category}</td>
                         <td class="px-4 py-2 dark:text-gray-100">${Number(product.stock).toLocaleString('en-US')}</td>
-                        <td class="px-4 py-2 dark:text-gray-100">جم ${Number(product.purchase_price).toLocaleString('en-US')}</td>
-                        <td class="px-4 py-2 dark:text-gray-100">جم ${(product.stock * product.purchase_price).toLocaleString('en-US')}</td>
+                        <td class="px-4 py-2 dark:text-gray-100">${currencySymbol} ${Number(product.purchase_price).toLocaleString('en-US')}</td>
+                        <td class="px-4 py-2 dark:text-gray-100">${currencySymbol} ${(product.stock * product.purchase_price).toLocaleString('en-US')}</td>
                     </tr>
                 `;
             });

@@ -15,6 +15,11 @@ class FinancialStats extends StatsOverviewWidget
     public $explainRows = [];
     public string $periodLabel = '';
 
+    protected function getCurrencySymbol(): string
+    {
+        return app()->getLocale() === 'ar' ? 'جم' : 'EGP';
+    }
+
     protected function getCards(): array
     {
         $now = Carbon::now();
@@ -67,9 +72,9 @@ class FinancialStats extends StatsOverviewWidget
                     'client' => optional($sale->client)->name ?? '—',
                     'date' => $sale->created_at->format('Y-m-d'),
                     'type' => __('Cash'),
-                    'amount_paid' => $finalPrice,
-                    'capital' => (int) round($capital),
-                    'profit' => (int) round($profit),
+                    'amount_paid' => number_format($finalPrice, 0) . ' ' . $this->getCurrencySymbol(),
+                    'capital' => number_format($capital, 0) . ' ' . $this->getCurrencySymbol(),
+                    'profit' => number_format($profit, 0) . ' ' . $this->getCurrencySymbol(),
                 ];
                 $totalCapital += $capital;
                 $totalProfit += $profit;
@@ -145,23 +150,27 @@ class FinancialStats extends StatsOverviewWidget
         $this->explainRows = $rows;
 
         return [
-            Card::make(__('Revenue'), number_format($totalRevenue, 0) . ' جم')
+            Card::make(__('Revenue'), number_format($totalRevenue, 0) . ' ' . $this->getCurrencySymbol())
                 ->description(__('All cash & paid installments for :label', ['label' => $label]))
                 ->color('success'),
 
-            Card::make(__('Capital'), number_format($totalCapital, 0) . ' جم')
+            Card::make(__('Capital'), number_format($totalCapital, 0) . ' ' . $this->getCurrencySymbol())
                 ->description(__('Capital portion of payments for :label', ['label' => $label]))
                 ->color('danger'),
 
-            Card::make(__('Profit'), number_format($totalProfit, 0) . ' جم')
+            Card::make(__('Profit'), number_format($totalProfit, 0) . ' ' . $this->getCurrencySymbol())
                 ->description(__('Profit portion of paid amounts for :label', ['label' => $label]))
                 ->color('primary'),
 
-            Card::make(__('Expenses'), number_format($totalExpenses, 0) . ' جم')
-                ->description(__('Total expenses for :label. Paid For Owner: :amount جم', ['label' => $label, 'amount' => number_format($ownerPaidExpenses, 0)]))
+            Card::make(__('Expenses'), number_format($totalExpenses, 0) . ' ' . $this->getCurrencySymbol())
+                ->description(__('Total expenses for :label. Paid For Owner: :amount :currency', [
+                    'label' => $label,
+                    'amount' => number_format($ownerPaidExpenses, 0),
+                    'currency' => $this->getCurrencySymbol(),
+                ]))
                 ->color('warning'),
 
-            Card::make(__('Net Profit'), number_format($netProfit, 0) . ' جم')
+            Card::make(__('Net Profit'), number_format($netProfit, 0) . ' ' . $this->getCurrencySymbol())
                 ->description(__('Profit - Expenses for :label', ['label' => $label]))
                 ->color('success'),
         ];

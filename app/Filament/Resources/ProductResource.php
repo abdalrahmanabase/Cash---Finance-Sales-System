@@ -163,6 +163,12 @@ class ProductResource extends Resource
                     ->money('EGP')
                     ->toggleable(isToggledHiddenByDefault: true),
 
+                TextColumn::make('profit_percentage')
+                    ->label(__('Profit %'))
+                    ->sortable()
+                    ->suffix('%')
+                    ->getStateUsing(fn ($record) => $record->profit_percentage),
+
                 TextColumn::make('stock')
                     ->label(__('Stock'))
                     ->sortable()

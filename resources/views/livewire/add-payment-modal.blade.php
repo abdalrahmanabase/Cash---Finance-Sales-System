@@ -10,7 +10,7 @@
                 <x-filament::input
                     type="number"
                     wire:model="amount"
-                    label="{{ __('Amount') }}"
+                    label="{{ __('Amount (:currency)', ['currency' => $currencySymbol]) }}"
                     required
                     step="1"
                 />

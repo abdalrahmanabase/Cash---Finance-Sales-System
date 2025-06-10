@@ -37,6 +37,11 @@ class CashSaleResource extends Resource
         return __('Sales Management');
     }
 
+    protected static function getCurrencySymbol(): string
+{
+    return app()->getLocale() === 'ar' ? 'جم' : 'EGP';
+}
+
     public static function form(Form $form): Form
     {
         return $form
@@ -115,7 +120,7 @@ class CashSaleResource extends Resource
                 TextInput::make('unit_price')
                     ->label(__('Unit Price'))
                     ->numeric()
-                    ->prefix(app()->getLocale() === 'ar' ? 'جم' : 'EGP')
+                    ->prefix(static::getCurrencySymbol())
                     ->disabled()
                     ->dehydrated(),
 
@@ -128,7 +133,7 @@ class CashSaleResource extends Resource
                 TextInput::make('total')
                     ->label(__('Item Total'))
                     ->numeric()
-                    ->prefix(app()->getLocale() === 'ar' ? 'جم' : 'EGP')
+                    ->prefix(static::getCurrencySymbol())
                     ->disabled()
                     ->dehydrated(),
             ])
@@ -232,7 +237,7 @@ class CashSaleResource extends Resource
 
                 TextColumn::make('final_price')
                     ->label(__('Final Price'))
-                    ->getStateUsing(fn ($record) => number_format($record->final_price, 2) . ' ' . (app()->getLocale() === 'ar' ? 'جم' : 'EGP'))
+                    ->getStateUsing(fn ($record) => number_format($record->final_price, 2) . ' ' . static::getCurrencySymbol())
                     ->sortable(),
             ])
             ->actions([
@@ -252,7 +257,8 @@ class CashSaleResource extends Resource
                     ->icon('heroicon-o-eye')
                     ->modalContent(function (Sale $record) {
                         return view('filament.sale-items', [
-                            'items' => $record->items()->with('product')->get()
+                            'items' => $record->items()->with('product')->get(),
+                            'currencySymbol' => app()->getLocale() === 'ar' ? 'جم' : 'EGP',
                         ]);
                     })
                     ->modalHeading(__('Sale Items')),

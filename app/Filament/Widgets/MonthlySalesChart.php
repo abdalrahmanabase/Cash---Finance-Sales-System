@@ -11,6 +11,11 @@ class MonthlySalesChart extends BaseWidget
 {
     protected static ?string $pollingInterval = null;
 
+    protected function getCurrencySymbol(): string
+{
+    return app()->getLocale() === 'ar' ? 'جم' : 'EGP';
+}
+
     protected function getStats(): array
     {
         $now = Carbon::now();
@@ -58,7 +63,7 @@ class MonthlySalesChart extends BaseWidget
             ? (($currentProfit - $previousProfit) / $previousProfit) * 100
             : ($currentProfit != 0 ? 100 : 0);
 
-        return Stat::make($label, number_format($currentProfit, 2) . ' جم')
+        return Stat::make($label, number_format($currentProfit, 2) . ' ' . $this->getCurrencySymbol())
             ->description($this->getChangeDescription($change))
             ->descriptionIcon($change >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
             ->color($change >= 0 ? 'success' : 'danger')

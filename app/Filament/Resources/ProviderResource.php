@@ -38,6 +38,11 @@ class ProviderResource extends Resource
         return __('Providers');
     }
 
+    protected static function getCurrencySymbol(): string
+{
+    return app()->getLocale() === 'ar' ? 'جم' : 'EGP';
+}
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -98,7 +103,7 @@ class ProviderResource extends Resource
 
                 Tables\Columns\TextColumn::make('total_debt')
                     ->label(__('Debt'))
-                    ->money('EGP'),
+                    ->money(static::getCurrencySymbol()),
             ])
             ->actions([
                 Tables\Actions\Action::make('addPayment')
@@ -107,7 +112,7 @@ class ProviderResource extends Resource
                     ->color('success')
                     ->form([
                         Forms\Components\TextInput::make('amount')
-                            ->label(__('Amount (جم)'))
+                            ->label(__('Amount (:currency)', ['currency' => static::getCurrencySymbol()]))
                             ->numeric()
                             ->required()
                             ->step(0),

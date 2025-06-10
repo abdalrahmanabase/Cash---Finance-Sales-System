@@ -43,7 +43,7 @@
                             {{ $payment['client'] }}
                         </td>
                         <td class="table-cell" data-label="{{ __('Paid Amount') }}">
-                            جم {{ number_format($payment['amount'], 2) }}
+                            {{ $currencySymbol }} {{ number_format($payment['amount'], 2) }}
                         </td>
                         <td class="table-cell" data-label="{{ __('Date') }}">
                             {{ \Carbon\Carbon::parse($payment['date'])->format('d-m-Y') }}

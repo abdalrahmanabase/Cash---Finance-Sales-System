@@ -304,6 +304,11 @@
 "Changes saved successfully.": "تم حفظ التغييرات بنجاح.",
 "An error occurred. Please try again.": "حدث خطأ. يرجى المحاولة مرة أخرى.",
 "Invalid input.": "إدخال غير صالح.",
-"This field is required.": "هذا الحقل مطلوب."
+"This field is required.": "هذا الحقل مطلوب.",
+  "Payment Amount (:currency)": "قيمة الدفعة (:currency)",
+"Amount (:currency)": "المبلغ (:currency)",
+  "Profit (:currency)": "الربح (:currency)",
+  "Interest Amount": "مبلغ الفائدة"
+
 
 }

@@ -24,6 +24,11 @@ class CashSalesProfitChart extends ChartWidget
         return 'line';
     }
 
+    protected function getCurrencySymbol(): string
+{
+    return app()->getLocale() === 'ar' ? 'جم' : 'EGP';
+}
+
     protected function getFilters(): ?array
     {
         return [
@@ -108,7 +113,7 @@ class CashSalesProfitChart extends ChartWidget
             'labels' => array_keys($data),
             'datasets' => [
                 [
-                    'label' => __('Profit (جم)'),
+                    'label' => __('Profit (:currency)', ['currency' => $this->getCurrencySymbol()]),
                     'data' => array_values($data),
                     'borderColor' => '#10B981',
                     'backgroundColor' => 'rgba(16, 185, 129, 0.2)',

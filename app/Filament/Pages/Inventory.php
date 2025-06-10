@@ -15,7 +15,10 @@ class Inventory extends Page
         return __('Inventory');
     }
 
-    
+    protected function getCurrencySymbol(): string
+{
+    return app()->getLocale() === 'ar' ? 'جم' : 'EGP';
+}
 
     public static function getNavigationGroup(): ?string
     {
@@ -30,24 +33,29 @@ class Inventory extends Page
     public $stockByCategory;
     public $lowStockProducts;
 
-    public function mount()
-    {
-        $this->products = Product::with('category')->get();
+    public string $currencySymbol = '';
 
-        $this->totalValue = $this->products->sum(fn($product) => $product->stock * $product->purchase_price);
+public function mount()
+{
+    $this->currencySymbol = $this->getCurrencySymbol();
 
-        $this->topProducts = $this->products->sortByDesc('stock')->take(10)->values();
+    $this->products = Product::with('category')->get();
 
-        $this->stockByCategory = $this->products
-            ->groupBy(fn($product) => $product->category->name ?? __('Uncategorized'))
-            ->map(fn($group) => $group->sum('stock'));
+    $this->totalValue = $this->products->sum(fn($product) => $product->stock * $product->purchase_price);
 
-        $this->lowStockProducts = $this->products->filter(fn($product) => $product->stock < 10);
-    }
+    $this->topProducts = $this->products->sortByDesc('stock')->take(10)->values();
+
+    $this->stockByCategory = $this->products
+        ->groupBy(fn($product) => $product->category->name ?? __('Uncategorized'))
+        ->map(fn($group) => $group->sum('stock'));
+
+    $this->lowStockProducts = $this->products->filter(fn($product) => $product->stock < 10);
+}
+
 
     public function getStats(): array
     {
-        $currency = app()->getLocale() === 'ar' ? 'جم' : 'EGP';
+        $currency = $this->getCurrencySymbol();
 
         return [
             Stat::make(__('Total Products'), $this->products->count())

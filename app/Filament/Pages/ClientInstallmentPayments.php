@@ -16,9 +16,8 @@ class ClientInstallmentPayments extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
     protected static string $view = 'filament.pages.client-installment-payments';
-    protected static ?string $navigationGroup = 'Clients Management';
-    protected static ?int $navigationSort = 10;
-    protected static ?string $title = 'Client Payments';
+    protected static ?string $navigationGroup = null;
+    protected static ?string $title = null;
 
     public static function getNavigationGroup(): ?string
     {
@@ -30,16 +29,22 @@ class ClientInstallmentPayments extends Page
         return __('Client Payments');
     }
 
+    protected function getCurrencySymbol(): string
+    {
+        return app()->getLocale() === 'ar' ? 'جم' : 'EGP';
+    }
+
     public $editingPayment = null;
     public $deletingPayment = null;
     public ?array $form = [];
 
     protected function getViewData(): array
-    {
-        return [
-            'allPayments' => $this->getAllPaymentsFiltered(),
-        ];
-    }
+{
+    return [
+        'allPayments' => $this->getAllPaymentsFiltered(),
+        'currencySymbol' => $this->getCurrencySymbol(),
+    ];
+}
 
     public function getActions(): array
     {
@@ -92,7 +97,7 @@ class ClientInstallmentPayments extends Page
                         }),
 
                     TextInput::make('paymentAmount')
-                        ->label(__('Payment Amount (:currency)', ['currency' => __('جم')]))
+                        ->label(__('Payment Amount (:currency)', ['currency' => $this->getCurrencySymbol()]))
                         ->numeric()
                         ->required()
                         ->minValue(0.01)
@@ -180,8 +185,9 @@ class ClientInstallmentPayments extends Page
                     if ($data['paymentAmount'] > $sale->remaining_amount) {
                         Notification::make()
                             ->title(__('Payment amount too large'))
-                            ->body(__("Payment cannot exceed remaining amount of :amount جم", [
+                            ->body(__("Payment cannot exceed remaining amount of :amount :currency", [
                                 'amount' => number_format($sale->remaining_amount, 2),
+                                'currency' => $this->getCurrencySymbol(),
                             ]))
                             ->danger()
                             ->send();
@@ -202,9 +208,10 @@ class ClientInstallmentPayments extends Page
                         Notification::make()
                             ->title(__('Payment Successful'))
                             ->body(
-                                __("Payment of :amount جم recorded.\nRemaining: :remaining جم\nMonths paid: :paid/:total", [
+                                __("Payment of :amount :currency recorded.\nRemaining: :remaining :currency\nMonths paid: :paid/:total", [
                                     'amount' => number_format($data['paymentAmount'], 2),
                                     'remaining' => number_format($status['remaining_amount'], 2),
+                                    'currency' => $this->getCurrencySymbol(),
                                     'paid' => $progress['fully_paid_months'],
                                     'total' => $sale->months_count,
                                 ])
@@ -366,6 +373,4 @@ public function getAllPaymentsFiltered(int $perPage = 10)
         ['path' => request()->url(), 'query' => request()->query()]
     );
 }
-
-
 }

@@ -34,6 +34,11 @@ class SalesProfitSummary extends Page implements HasTable
         return __('Cash Sales Profit Summary');
     }
 
+    protected function getCurrencySymbol(): string
+{
+    return app()->getLocale() === 'ar' ? 'جم' : 'EGP';
+}
+
     protected function getHeaderWidgets(): array
     {
         return [
@@ -60,8 +65,6 @@ class SalesProfitSummary extends Page implements HasTable
 
     public function table(Table $table): Table
     {
-        $currency = app()->getLocale() === 'ar' ? 'جم' : 'EGP';
-
         return $table
             ->query($this->getTableQuery())
             ->columns([
@@ -72,16 +75,16 @@ class SalesProfitSummary extends Page implements HasTable
 
                 TextColumn::make('final_price')
                     ->label(__('Sale Amount'))
-                    ->getStateUsing(fn ($record) => number_format($record->final_price, 2) . " $currency")
+                    ->getStateUsing(fn ($record) => number_format($record->final_price, 2) . ' ' . $this->getCurrencySymbol())
                     ->sortable(),
 
                 TextColumn::make('cost_raw')
                     ->label(__('Cost'))
-                    ->getStateUsing(fn ($record) => number_format($record->cost_raw, 2) . " $currency"),
+                    ->getStateUsing(fn ($record) => number_format($record->cost_raw, 2) . ' ' . $this->getCurrencySymbol()),
 
                 TextColumn::make('profit_raw')
                     ->label(__('Profit'))
-                    ->getStateUsing(fn ($record) => number_format($record->profit_raw, 2) . " $currency")
+                    ->getStateUsing(fn ($record) => number_format($record->profit_raw, 2) . ' ' . $this->getCurrencySymbol())
                     ->color(fn ($record) => $record->profit_raw >= 0 ? 'success' : 'danger'),
             ])
             ->filters([

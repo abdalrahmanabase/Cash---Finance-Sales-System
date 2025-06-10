@@ -31,4 +31,16 @@ class Product extends Model
         return $this->belongsTo(Provider::class);
     }
 
+    public function getProfitAttribute(): float
+{
+    return ($this->cash_price ?? 0) - ($this->purchase_price ?? 0);
+}
+
+public function getProfitPercentageAttribute(): float
+{
+    $purchase = $this->purchase_price ?? 0;
+    $profit = $this->profit;
+    return $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0;
+}
+
 }

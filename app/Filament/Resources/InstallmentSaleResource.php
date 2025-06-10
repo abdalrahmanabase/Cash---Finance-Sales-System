@@ -100,7 +100,13 @@ class InstallmentSaleResource extends Resource
                                         $set('unit_price',       $product?->cash_price ?? 0);
                                         $set('available_stock',  $product?->stock ?? 0);
                                     })
-                                    ->required(),
+                                    ->required()
+                                    ->suffixAction(
+                                fn() => \Filament\Forms\Components\Actions\Action::make('createProduct')
+                                    ->label(__('Create Product'))
+                                    ->icon('heroicon-o-plus')
+                                    ->url(route('filament.admin.resources.products.create'))
+                            ),
 
                                 TextInput::make('quantity')
                                     ->label(__('Quantity'))

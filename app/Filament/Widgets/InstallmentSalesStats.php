@@ -6,14 +6,11 @@ use App\Models\Sale;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use App\Filament\Pages\InstallmentSalesSummary;
+use Illuminate\Support\Facades\Log;
 
 class InstallmentSalesStats extends BaseWidget
 {
-    public ?string $selectedMonth = null;
-
     protected static bool $refreshOnWidgetDataChanges = true;
-    protected static bool $isDiscovered = false;
 
     protected function getCurrencySymbol(): string
     {
@@ -22,128 +19,83 @@ class InstallmentSalesStats extends BaseWidget
 
     protected function getStats(): array
     {
-        $selectedMonth = $this->selectedMonth ?? now()->format('Y-m');
-        $isAll = $selectedMonth === 'all' || $selectedMonth === null;
+        $cs = $this->getCurrencySymbol();
+        $nf = fn($v) => number_format($v, 0, '', ',');
 
-        $expectedPayment = $expectedProfit = $expectedCapital = 0;
-        $paidThisMonth = $paidProfit = $paidCapital = 0;
-        $remainingThisMonth = $remainingProfit = $remainingCapital = 0;
-        $previousUnpaid = $prevUnpaidProfit = $prevUnpaidCapital = 0;
+        $currentMonthYear = now()->format('Y-m');
+        $firstDayOfCurrentMonth = now()->startOfMonth();
 
-        $sales = Sale::where('sale_type', 'installment')->get();
+        // Use the 'activeInstallments' scope to fetch only ongoing installment sales
+        $sales = Sale::activeInstallments()->get();
+
+        // --- Initialize all totals to zero ---
+        $expectedThisMonth = $paidThisMonth = $remainingThisMonth = $previousMonthsUnpaid = 0;
+        $expectedProfit = $expectedCapital = 0;
+        $paidProfit = $paidCapital = 0;
+        $remainingProfit = $remainingCapital = 0;
+        $prevUnpaidProfit = $prevUnpaidCapital = 0;
 
         foreach ($sales as $sale) {
-            $baseDate = $sale->created_at instanceof Carbon ? $sale->created_at : Carbon::parse($sale->created_at);
-            $preferredDay = (int)($sale->preferred_payment_day ?: $baseDate->day);
-            $months = $sale->months_count ?? 0;
-            $monthly = (float) ($sale->monthly_installment ?? 0);
-
-            $totalCost     = $sale->total_cost;
-            $downPayment   = $sale->down_payment ?? 0;
-            $monthlyCapital = $months > 0 ? ($totalCost - $downPayment) / $months : 0;
-            $monthlyProfit = $monthly - $monthlyCapital;
-
-            // Schedule (skip down payment)
-            $schedule = [];
-            for ($i = 1; $i < $months; $i++) {
-                $dueDate = $baseDate->copy()->addMonthsNoOverflow($i)->setDay(
-                    min($preferredDay, $baseDate->copy()->addMonthsNoOverflow($i)->daysInMonth)
-                );
-                $monthKey = $dueDate->format('Y-m');
-                $schedule[$monthKey][] = [
-                    'date' => $dueDate->format('Y-m-d'),
-                    'amount' => $monthly,
-                ];
-            }
-
-            // Payments grouped by month
-            $paidByMonth = [];
-            $paidRows = [];
-            if (is_array($sale->payment_dates) && is_array($sale->payment_amounts)) {
-                foreach ($sale->payment_dates as $i => $date) {
-                    $monthKey = Carbon::parse($date)->format('Y-m');
-                    $amt = (float)($sale->payment_amounts[$i] ?? 0);
-                    $paidByMonth[$monthKey] = ($paidByMonth[$monthKey] ?? 0) + $amt;
-                    $paidRows[] = [
-                        'amount' => $amt,
-                        'date'   => $date,
-                        'month'  => $monthKey,
-                    ];
+            // --- 1. Calculate "Paid" Stat (Cash Flow This Month) ---
+            // This sums up all payments recorded with a date in the current calendar month.
+            foreach ($sale->getPaymentsForMonth($currentMonthYear) as $payment) {
+                $paidThisMonth += $payment['amount'];
+                // Prorate profit/capital for the paid amount, assuming consistent margin on final price
+                if ($sale->final_price > 0) {
+                    $paidProfit += ($payment['amount'] / $sale->final_price) * $sale->profit;
+                    $paidCapital += ($payment['amount'] / $sale->final_price) * $sale->total_cost;
                 }
             }
 
-            // ---------- EXPECTED CARD ----------
-            if (!$isAll && isset($schedule[$selectedMonth])) {
-                foreach ($schedule[$selectedMonth] as $due) {
-                    $expectedPayment += $monthly;
-                    $expectedProfit  += $monthlyProfit;
-                    $expectedCapital += $monthlyCapital;
-                }
-            } elseif ($isAll) {
-                foreach ($schedule as $monthArr) {
-                    foreach ($monthArr as $due) {
-                        $expectedPayment += $monthly;
-                        $expectedProfit  += $monthlyProfit;
-                        $expectedCapital += $monthlyCapital;
-                    }
-                }
+            $nextPaymentDate = $sale->next_payment_date;
+            if (!$nextPaymentDate) {
+                continue; // Skip if there's no next payment date for an ongoing sale
             }
 
-            // ---------- PAID CARD ----------
-            if (!$isAll) {
-                foreach ($paidRows as $row) {
-                    if ($row['month'] === $selectedMonth) {
-                        $paidThisMonth += $row['amount'];
-                        $portion = $monthly > 0 ? $row['amount'] / $monthly : 0;
-                        $paidProfit  += $monthlyProfit * $portion;
-                        $paidCapital += $monthlyCapital * $portion;
-                    }
-                }
-            } else {
-                foreach ($paidRows as $row) {
-                    $paidThisMonth += $row['amount'];
-                    $portion = $monthly > 0 ? $row['amount'] / $monthly : 0;
-                    $paidProfit  += $monthlyProfit * $portion;
-                    $paidCapital += $monthlyCapital * $portion;
-                }
-            }
+            // Get the remaining amount for the current installment cycle.
+            // This is used for all calculations involving current and overdue amounts.
+            $dueAmount = $sale->current_month_due;
 
-            // ---------- REMAINING THIS MONTH CARD ----------
-            if (!$isAll && isset($schedule[$selectedMonth])) {
-                $scheduled = count($schedule[$selectedMonth]) * $monthly;
-                $paid      = $paidByMonth[$selectedMonth] ?? 0;
-                $rem       = $scheduled - $paid;
-                if ($rem > 0) {
-                    $remainingThisMonth += $rem;
-                    $portion = $monthly > 0 ? $rem / $monthly : 0;
-                    $remainingProfit  += $monthlyProfit * $portion;
-                    $remainingCapital += $monthlyCapital * $portion;
-                }
-            }
+            if ($nextPaymentDate->format('Y-m') === $currentMonthYear) {
+                // --- 2. Handle Sales with Dues in the CURRENT Month ---
 
-            // ---------- PREVIOUS MONTHS UNPAID CARD ----------
-            if (!$isAll) {
-                foreach ($schedule as $monthKey => $monthArr) {
-                    if ($monthKey < $selectedMonth) {
-                        $scheduled = count($monthArr) * $monthly;
-                        $paid      = $paidByMonth[$monthKey] ?? 0;
-                        $rem       = $scheduled - $paid;
-                        if ($rem > 0) {
-                            $previousUnpaid += $rem;
-                            $portion = $monthly > 0 ? $rem / $monthly : 0;
-                            $prevUnpaidProfit  += $monthlyProfit * $portion;
-                            $prevUnpaidCapital += $monthlyCapital * $portion;
-                        }
-                    }
+                // ** MODIFIED LOGIC PER YOUR REQUEST **
+                // "Expected Payment" is the sum of currently outstanding due amounts for this month.
+                $expectedThisMonth += $dueAmount;
+
+                // "Remaining This Month" is also the current outstanding balance for this month's installment.
+                $remainingThisMonth += $dueAmount;
+
+                // --- Associated Profit & Capital ---
+                // Both Expected and Remaining profit/capital will be based on the dueAmount.
+                $profitOnDue = $sale->getProfitOnDueAmount();
+                $capitalOnDue = $sale->getCapitalOnDueAmount();
+
+                $expectedProfit += $profitOnDue;
+                $expectedCapital += $capitalOnDue;
+                $remainingProfit += $profitOnDue;
+                $remainingCapital += $capitalOnDue;
+
+            } elseif ($nextPaymentDate->lt($firstDayOfCurrentMonth)) {
+                // --- 3. Handle OVERDUE Sales from PREVIOUS Months ---
+
+                // Calculate how many full months have been missed between the due date and now.
+                $monthsMissed = $firstDayOfCurrentMonth->diffInMonths($nextPaymentDate);
+
+                // "Previous Months Unpaid" = (all fully missed installments) + (the partial balance of the first overdue installment).
+                $overdueAmount = ($monthsMissed * $sale->monthly_installment) + $dueAmount;
+                $previousMonthsUnpaid += $overdueAmount;
+
+                // --- Associated Profit & Capital for Overdue Amount ---
+                if ($sale->final_price > 0) {
+                    $prevUnpaidProfit += ($overdueAmount / $sale->final_price) * $sale->profit;
+                    $prevUnpaidCapital += ($overdueAmount / $sale->final_price) * $sale->total_cost;
                 }
             }
         }
 
-        $cs = $this->getCurrencySymbol();
-        $nf = fn($v) => number_format($v, 0, '', ',');
-
         return [
-            Stat::make(__('Expected Payment'), $nf($expectedPayment) . ' ' . $cs)
+            Stat::make(__('Expected Payment'), $nf($expectedThisMonth) . ' ' . $cs)
                 ->description(__('Profit: :profit :currency | Capital: :capital :currency', [
                     'profit' => $nf($expectedProfit),
                     'capital' => $nf($expectedCapital),
@@ -167,7 +119,7 @@ class InstallmentSalesStats extends BaseWidget
                 ]))
                 ->color('warning'),
 
-            Stat::make(__('Previous Months Unpaid'), $nf($previousUnpaid) . ' ' . $cs)
+            Stat::make(__('Previous Months Unpaid'), $nf($previousMonthsUnpaid) . ' ' . $cs)
                 ->description(__('Profit: :profit :currency | Capital: :capital :currency', [
                     'profit' => $nf($prevUnpaidProfit),
                     'capital' => $nf($prevUnpaidCapital),
@@ -176,12 +128,4 @@ class InstallmentSalesStats extends BaseWidget
                 ->color('danger'),
         ];
     }
-
-    protected function getFilteredSales()
-    {
-        $selectedMonth = $this->selectedMonth ?? now()->format('Y-m');
-        $query = Sale::with('items.product')->where('sale_type', 'installment');
-        return InstallmentSalesSummary::filterSalesByMonth($query, $selectedMonth)->get();
-    }
 }
-    

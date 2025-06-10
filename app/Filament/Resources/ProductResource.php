@@ -78,61 +78,59 @@ class ProductResource extends Resource
                     ->default(0),
             ])->columns(3),
 
-            Section::make(__('Pricing'))
-                ->schema([
-                    TextInput::make('purchase_price')
-                        ->label(__('Purchase Price'))
-                        ->required()
-                        ->numeric()
-                        ->minValue(0)
-                        ->prefix(__('EGP'))
-                        ->reactive()
-                        ->debounce(500)
-                        ->afterStateUpdated(function (callable $set, callable $get) {
-                            $purchase = floatval($get('purchase_price'));
-                            $cash = floatval($get('cash_price'));
-                            $profit = $cash - $purchase;
+            Section::make(__('Pricing'))->schema([
+                TextInput::make('purchase_price')
+                    ->label(__('Purchase Price'))
+                    ->required()
+                    ->numeric()
+                    ->minValue(0)
+                    ->prefix(__('EGP'))
+                    ->reactive()
+                    ->lazy()  // ← only sync & calculate on blur
+                    ->afterStateUpdated(function (callable $set, callable $get) {
+                        $purchase = floatval($get('purchase_price'));
+                        $cash     = floatval($get('cash_price'));
+                        $profit   = $cash - $purchase;
 
-                            $set('profit', $profit);
-                            $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0);
-                        })
-                        ->formatStateUsing(fn ($state) => number_format($state, 2, '.', '')),
+                        $set('profit', $profit);
+                        $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 0) : 0);
+                    })
+                    ->formatStateUsing(fn ($state) => number_format($state, 0, '.', '')),
 
-                    TextInput::make('cash_price')
-                        ->label(__('Cash Price'))
-                        ->required()
-                        ->numeric()
-                        ->minValue(0)
-                        ->prefix(__('EGP'))
-                        ->reactive()
-                        ->debounce(500)
-                        ->afterStateUpdated(function (callable $set, callable $get) {
-                            $purchase = floatval($get('purchase_price'));
-                            $cash = floatval($get('cash_price'));
-                            $profit = $cash - $purchase;
+                TextInput::make('cash_price')
+                    ->label(__('Cash Price'))
+                    ->required()
+                    ->numeric()
+                    ->minValue(0)
+                    ->prefix(__('EGP'))
+                    ->reactive()
+                    ->lazy()  // ← only sync & calculate on blur
+                    ->afterStateUpdated(function (callable $set, callable $get) {
+                        $purchase = floatval($get('purchase_price'));
+                        $cash     = floatval($get('cash_price'));
+                        $profit   = $cash - $purchase;
 
-                            $set('profit', $profit);
-                            $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0);
-                        })
-                        ->formatStateUsing(fn ($state) => number_format($state, 2, '.', '')),
+                        $set('profit', $profit);
+                        $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 0) : 0);
+                    })
+                    ->formatStateUsing(fn ($state) => number_format($state, 0, '.', '')),
 
-                    TextInput::make('profit')
-                        ->label(__('Profit (Auto)'))
-                        ->disabled()
-                        ->numeric()
-                        ->prefix(__('EGP'))
-                        ->default(0)
-                        ->formatStateUsing(fn ($state) => number_format($state, 2, '.', '')),
+                TextInput::make('profit')
+                    ->label(__('Profit (Auto)'))
+                    ->disabled()
+                    ->numeric()
+                    ->prefix(__('EGP'))
+                    ->default(0)
+                    ->formatStateUsing(fn ($state) => number_format($state, 0, '.', '')),
 
-                    TextInput::make('profit_percentage')
-                        ->label(__('Profit %'))
-                        ->disabled()
-                        ->numeric()
-                        ->suffix('%')
-                        ->default(0)
-                        ->formatStateUsing(fn ($state) => number_format($state, 2, '.', '')),
-                ])
-                ->columns(3),
+                TextInput::make('profit_percentage')
+                    ->label(__('Profit %'))
+                    ->disabled()
+                    ->numeric()
+                    ->suffix('%')
+                    ->default(0)
+                    ->formatStateUsing(fn ($state) => number_format($state, 0, '.', '')),
+            ])->columns(3),
         ]);
     }
 
@@ -153,25 +151,24 @@ class ProductResource extends Resource
                 TextColumn::make('purchase_price')
                     ->label(__('Purchase Price'))
                     ->sortable()
-                    ->getStateUsing(fn ($record) => number_format($record->purchase_price, 2, '.', '') . ' ' . __('EGP'))
+                    ->getStateUsing(fn ($record) => number_format($record->purchase_price, 0, '.', '') . ' ' . __('EGP'))
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('cash_price')
                     ->label(__('Cash Price'))
                     ->sortable()
-                    ->getStateUsing(fn ($record) => number_format($record->cash_price, 2, '.', '') . ' ' . __('EGP')),
+                    ->getStateUsing(fn ($record) => number_format($record->cash_price, 0, '.', '') . ' ' . __('EGP')),
 
                 TextColumn::make('profit')
                     ->label(__('Profit'))
-                    ->sortable()
-                    ->getStateUsing(fn ($record) => number_format($record->profit, 2, '.', '') . ' ' . __('EGP'))
+                    ->getStateUsing(fn ($record) => number_format($record->profit, 0, '.', '') . ' ' . __('EGP'))
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('profit_percentage')
                     ->label(__('Profit %'))
-                    ->sortable()
                     ->suffix('%')
-                    ->getStateUsing(fn ($record) => number_format($record->profit_percentage, 2, '.', '')),
+                    ->getStateUsing(fn ($record) => number_format($record->profit_percentage, 0, '.', '')),
+
                 TextColumn::make('stock')
                     ->label(__('Stock'))
                     ->sortable()
@@ -207,7 +204,7 @@ class ProductResource extends Resource
                     ->trueLabel(__('In Stock'))
                     ->falseLabel(__('Out of Stock'))
                     ->queries(
-                        true: fn ($query) => $query->where('stock', '>', 0),
+                        true:  fn ($query) => $query->where('stock', '>', 0),
                         false: fn ($query) => $query->where('stock', '<=', 0),
                     ),
             ])
@@ -236,9 +233,9 @@ class ProductResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListProducts::route('/'),
-            'create' => Pages\CreateProduct::route('/create'),
-            'edit' => Pages\EditProduct::route('/{record}/edit'),
+            'index'   => Pages\ListProducts::route('/'),
+            'create'  => Pages\CreateProduct::route('/create'),
+            'edit'    => Pages\EditProduct::route('/{record}/edit'),
         ];
     }
 }

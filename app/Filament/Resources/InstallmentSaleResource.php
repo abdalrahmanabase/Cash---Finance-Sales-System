@@ -88,7 +88,7 @@ class InstallmentSaleResource extends Resource
                                     ->relationship('product', 'name')
                                     ->searchable()
                                     ->preload()
-                                    ->live()
+                                    ->lazy()  
                                     ->afterStateHydrated(function ($state, Set $set) {
                                         if (!$state) return;
                                         $product = Product::find($state);
@@ -107,7 +107,7 @@ class InstallmentSaleResource extends Resource
                                     ->numeric()
                                     ->default(0)
                                     ->minValue(1)
-                                    ->live(onBlur: true)
+                                    ->lazy() 
                                     ->afterStateUpdated(function (Get $get, Set $set) {
                                         $qty    = $get('quantity');
                                         $prodId = $get('product_id');
@@ -154,7 +154,6 @@ class InstallmentSaleResource extends Resource
                                         $set('total', $qty * $up);
                                     }),
                             ])
-                            ->live()
                             ->afterStateUpdated(fn (Get $get, Set $set) => static::updateTotals($get, $set))
                             ->afterStateHydrated(function (Get $get, Set $set, $state) {
                                 foreach ($state as $index => $item) {
@@ -175,7 +174,7 @@ class InstallmentSaleResource extends Resource
                             ])
                             ->default('fixed')
                             ->dehydrated(false)
-                            ->live()
+                            ->lazy() 
                             ->afterStateHydrated(function (Set $set, $state, $record) {
                                 if (!$record) return;
                                 $subtotal = $record->total_price  ?? 0;
@@ -195,7 +194,7 @@ class InstallmentSaleResource extends Resource
                             ->numeric()
                             ->default(0)
                             ->minValue(0)
-                            ->live(onBlur: true)
+                            ->lazy() 
                             ->afterStateHydrated(function (Set $set, $state, $record) {
                                 if (!$record) return;
                                 $subtotal = $record->total_price ?? 0;
@@ -231,7 +230,7 @@ class InstallmentSaleResource extends Resource
                             ->numeric()
                             ->required()
                             ->default(0)
-                            ->live(onBlur: true)
+                            ->lazy() 
                             ->dehydrated(true)
                             ->afterStateHydrated(fn (Set $set, $state) => $set('down_payment', floatval($state ?? 0)))
                             ->afterStateUpdated(function (Get $get, Set $set, $state) {
@@ -256,7 +255,7 @@ class InstallmentSaleResource extends Resource
                             ->maxValue(1000)
                             ->default(0)
                             ->suffix('%')
-                            ->live(onBlur: true)
+                            ->lazy() 
                             ->afterStateUpdated(fn (Get $get, Set $set) => static::updateInstallmentCalculations($get, $set))
                             ->required(),
 
@@ -273,7 +272,7 @@ class InstallmentSaleResource extends Resource
                             ->minValue(1)
                             ->maxValue(100)
                             ->default(12)
-                            ->live(onBlur: true)
+                            ->lazy() 
                             ->afterStateUpdated(fn (Get $get, Set $set) => static::updateInstallmentCalculations($get, $set))
                             ->required(),
 
@@ -283,7 +282,7 @@ class InstallmentSaleResource extends Resource
                             ->step(1)
                             ->rules(['integer'])
                             ->prefix(static::getCurrencySymbol())
-                            ->live(onBlur: true)
+                            ->lazy() 
                             ->afterStateUpdated(fn (Get $get, Set $set) => static::updateInstallmentFromMonthly($get, $set))
                             ->required(),
 
@@ -396,6 +395,7 @@ class InstallmentSaleResource extends Resource
 
                 TextColumn::make('client.name')
                     ->label(__('Client'))
+                    ->sortable()
                     ->searchable(),
 
                 TextColumn::make('final_price')

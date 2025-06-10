@@ -104,7 +104,7 @@ class ProviderResource extends Resource
 
                 Tables\Columns\TextColumn::make('total_debt')
                     ->label(__('Debt'))
-                    ->formatStateUsing(fn ($state): string => number_format($state, 2) . ' ' . static::getCurrencySymbol()),
+                    ->formatStateUsing(fn ($state): string => number_format($state, 0) . ' ' . static::getCurrencySymbol()),
             ])
             ->actions([
                 Tables\Actions\Action::make('addPayment')

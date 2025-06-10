@@ -19,7 +19,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Navigation\UserMenuItem;
 use Filament\PluginServiceProvider;
-
+use Filament\Navigation\NavigationGroup;
 use App\Filament\Widgets\InstallmentSalesStats;
 use App\Filament\Widgets\SaleOptionsButton;
 use App\Filament\Widgets\ClientInstallmentPaymentWidget;
@@ -44,6 +44,12 @@ class AdminPanelProvider extends PanelProvider
                 ->label('العربية')
                 ->url(fn (): string => route('lang.switch', 'ar'))
             ,
+            ])
+            ->navigationGroups([
+                'Sales Management',
+                'Financial Management',
+                'Products Management',
+                'Clients Management',
             ])
             ->brandLogo(fn () => view('filament.logo-with-text'))
             ->favicon(asset('favicon-removebg-preview (1).png'))

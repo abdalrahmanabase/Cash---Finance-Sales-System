@@ -1,23 +1,27 @@
-<x-filament::widget class="!px-4 !py-6">
-    <div class="flex flex-col gap-4">
-        <x-filament::button
-            color="success"
-            tag="a"
-            href="{{ \App\Filament\Resources\CashSaleResource::getUrl('create') }}"
-            icon="heroicon-o-currency-dollar"
-            class="w-full justify-center py-6 text-size-lg"
-        >
-            {{ __('New Cash Sale') }}
-        </x-filament::button>
-    
-        <x-filament::button
-            color="primary"
-            tag="a"
-            href="{{ \App\Filament\Resources\InstallmentSaleResource::getUrl('create') }}"
-            icon="heroicon-o-credit-card"
-            class="w-full justify-center py-6 text-size-lg"
-        >
-            {{ __('New Installment Sale') }}
-        </x-filament::button>
-    </div>
+<x-filament::widget>
+    <x-filament::card class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 shadow-md rounded-lg p-6">
+        <div class="flex gap-4">
+            <x-filament::button
+                tag="a"
+                href="{{ \App\Filament\Resources\CashSaleResource::getUrl('create') }}"
+                icon="heroicon-o-currency-dollar"
+                size="lg"
+                color="success"
+                class="flex-1 justify-center py-3 text-lg"
+            >
+                {{ __('New Cash Sale') }}
+            </x-filament::button>
+
+            <x-filament::button
+                tag="a"
+                href="{{ \App\Filament\Resources\InstallmentSaleResource::getUrl('create') }}"
+                icon="heroicon-o-credit-card"
+                size="lg"
+                color="primary"
+                class="flex-1 justify-center py-3 text-lg"
+            >
+                {{ __('New Installment Sale') }}
+            </x-filament::button>
+        </div>
+    </x-filament::card>
 </x-filament::widget>

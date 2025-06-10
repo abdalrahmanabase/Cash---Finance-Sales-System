@@ -10,7 +10,7 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 class MonthlySalesChart extends BaseWidget
 {
     protected static ?string $pollingInterval = null;
-
+protected static bool $isDiscovered = false;
     protected function getCurrencySymbol(): string
 {
     return app()->getLocale() === 'ar' ? 'جم' : 'EGP';

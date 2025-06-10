@@ -349,7 +349,13 @@
     "Go to Client Payments": "اذهب لمدفوعات العميل",
   "Create Payment": "إنشاء دفعة",
   "Delete Selected": "حذف المحدد",
-  "Day of month (e.g. 5 → pay every month on the 5th)": "يوم من الشهر (مثلاً 5 → الدفع كل شهر في اليوم الخامس)"
+  "Day of month (e.g. 5 → pay every month on the 5th)": "يوم من الشهر (مثلاً 5 → الدفع كل شهر في اليوم الخامس)",
+    "Custom Range":            "نطاق مخصص",
+    "From":                    "من",
+    "To":                      "إلى",
+    "No sales found.":         "لا توجد مبيعات.",
+    "Go to Payments": "اذهب إلى المدفوعات",
+    "Track and manage installment payments": "تتبع وإدارة مدفوعات الأقساط"
 
 
 }

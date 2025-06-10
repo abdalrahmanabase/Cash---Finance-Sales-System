@@ -20,7 +20,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Navigation\UserMenuItem;
 use Filament\PluginServiceProvider;
 
-use App\Filament\Widgets\FinancialStats;
+use App\Filament\Widgets\InstallmentSalesStats;
 use App\Filament\Widgets\SaleOptionsButton;
 use App\Filament\Widgets\ClientInstallmentPaymentWidget;
 use App\Filament\Widgets\CashSalesProfitChart;
@@ -59,13 +59,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                // Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
-                // FinancialStats::class, 
-                // SaleOptionsButton::class, 
-                // ClientInstallmentPaymentWidget::class,
-                // MonthlySalesChart::class,
-                // CashSalesProfitChart::class,
+                ClientInstallmentPaymentWidget::class,
+                SaleOptionsButton::class,
+                InstallmentSalesStats::class,
+                CashSalesProfitChart::class,
             ])
             ->middleware([
                 EncryptCookies::class,

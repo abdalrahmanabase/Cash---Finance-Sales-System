@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 class WeeklySalesChart extends ChartWidget
 {
     protected static ?string $heading = null;
-
+protected static bool $isDiscovered = false;
     public function getHeading(): string
     {
         return __('Weekly Sales');

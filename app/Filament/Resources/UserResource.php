@@ -73,10 +73,10 @@ class UserResource extends Resource
                 ->label(__('Role'))
                 ->disabled(fn ($record) => $record && $record->role !== null),
 
-            TextInput::make('capital_share')
-                ->numeric()
-                ->label(__('Capital Share'))
-                ->default(0),
+            // TextInput::make('capital_share')
+            //     ->numeric()
+            //     ->label(__('Capital Share'))
+            //     ->default(0),
         ]);
     }
 
@@ -98,10 +98,10 @@ class UserResource extends Resource
                     ->label(__('Role'))
                     ->sortable(),
 
-                TextColumn::make('capital_share')
-                    ->label(__('Capital Share'))
-                    ->sortable()
-                    ->formatStateUsing(fn ($state) => __('EGP') . ' ' . number_format($state, 0)),
+                // TextColumn::make('capital_share')
+                //     ->label(__('Capital Share'))
+                //     ->sortable()
+                //     ->formatStateUsing(fn ($state) => __('EGP') . ' ' . number_format($state, 0)),
             ]);
     }
 

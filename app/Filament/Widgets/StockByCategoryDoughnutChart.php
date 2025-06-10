@@ -8,7 +8,7 @@ use App\Models\Product;
 class StockByCategoryDoughnutChart extends ChartWidget
 {
     protected static ?string $heading = null;
-
+protected static bool $isDiscovered = false;
     public function getHeading(): string
     {
         return __('Stock Distribution by Category');

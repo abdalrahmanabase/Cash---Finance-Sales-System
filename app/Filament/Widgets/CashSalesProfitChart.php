@@ -11,6 +11,9 @@ class CashSalesProfitChart extends ChartWidget
     protected static ?string $heading = null;
     protected static ?string $maxHeight = '300px';
     protected static ?string $pollingInterval = null;
+    protected static bool $isDiscovered = false;
+    protected int | string | array $columnSpan = 'full';
+
 
     public function getHeading(): string
     {

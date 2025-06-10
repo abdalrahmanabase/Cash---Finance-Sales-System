@@ -14,7 +14,7 @@ class InstallmentSalesStats extends BaseWidget
     public ?string $selectedMonth = null;
 
     protected static bool $refreshOnWidgetDataChanges = true;
-
+protected static bool $isDiscovered = false;
     protected function getCurrencySymbol(): string
 {
     return app()->getLocale() === 'ar' ? 'جم' : 'EGP';

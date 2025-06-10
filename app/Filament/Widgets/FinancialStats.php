@@ -8,12 +8,13 @@ use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
 use Illuminate\Pagination\LengthAwarePaginator;
-
+use Illuminate\Contracts\View\View;
 class FinancialStats extends StatsOverviewWidget
 {
     public string $period = 'all_time';
     public $explainRows = [];
     public string $periodLabel = '';
+    protected static bool $isDiscovered = false;
 
     protected function getCurrencySymbol(): string
     {

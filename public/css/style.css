@@ -63,7 +63,7 @@ body {
 }
 .table-header-cell {
   padding: 12px 16px;
-  text-align: left;
+  text-align: start;
   font-size: 0.875rem;
   font-weight: 500;
   border-bottom: 1px solid var(--border);
@@ -82,6 +82,10 @@ body {
   border-bottom: 1px solid var(--border);
   font-size: 0.875rem;
   color: var(--text);
+}
+
+html[lang="ar"] .table-header {
+    text-align: end;
 }
 
 /* Action buttons */

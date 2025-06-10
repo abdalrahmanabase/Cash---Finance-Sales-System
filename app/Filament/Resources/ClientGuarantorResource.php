@@ -26,6 +26,16 @@ class ClientGuarantorResource extends Resource
         return __('Clients Management');
     }
 
+    public static function getModelLabel(): string
+{
+    return __('Client Guarantor');
+}
+
+public static function getPluralModelLabel(): string
+{
+    return __('Client Guarantors');
+}
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -92,10 +102,6 @@ class ClientGuarantorResource extends Resource
             Tables\Columns\TextColumn::make('receipt_number')
                 ->label(__('Receipt Number'))
                 ->toggleable(),
-        ])
-        ->actions([
-            Tables\Actions\CreateAction::make()->label(__('Add Client Guarantor')),
-
         ]);
     }
 

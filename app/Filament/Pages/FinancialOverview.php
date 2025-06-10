@@ -10,8 +10,14 @@ class FinancialOverview extends Page
     protected static string $view = 'filament.pages.financial-overview';
 
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
-    protected static ?string $navigationLabel = 'Financial Overview';
-    protected static ?string $navigationGroup = 'Financial Management';
+     protected static ?string $navigationLabel = null;
+    protected static ?string $navigationGroup = null;
+    protected static ?string $title = null;
+
+    public  function getTitle(): string
+    {
+        return __('Financial Overview');
+    }
 
     public static function getNavigationLabel(): string
     {

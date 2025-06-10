@@ -19,8 +19,9 @@ class ExpenseResource extends Resource
     protected static ?string $model = Expense::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
-    protected static ?string $navigationLabel = 'Expenses';
-    protected static ?string $navigationGroup = 'Financial Management';
+    protected static ?string $navigationLabel = null;
+    protected static ?string $navigationGroup = null;
+    protected static ?string $title = null;
 
     public static function getNavigationLabel(): string
     {
@@ -32,6 +33,18 @@ class ExpenseResource extends Resource
         return __('Financial Management');
     }
 
+    public static function getTitle(): string
+    {
+        return __('Expenses');
+    }
+    public static function getModelLabel(): string
+    {
+        return __('Expense');
+    }
+    public static function getPluralModelLabel(): string
+    {
+        return __('Expenses');
+    }
     protected static function getCurrencySymbol(): string
     {
         return app()->getLocale() === 'ar' ? 'جم' : 'EGP';

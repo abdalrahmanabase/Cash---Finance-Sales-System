@@ -95,7 +95,8 @@ class ProductResource extends Resource
 
                             $set('profit', $profit);
                             $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0);
-                        }),
+                        })
+                        ->formatStateUsing(fn ($state) => number_format($state, 2, '.', '')),
 
                     TextInput::make('cash_price')
                         ->label(__('Cash Price'))
@@ -112,21 +113,24 @@ class ProductResource extends Resource
 
                             $set('profit', $profit);
                             $set('profit_percentage', $purchase > 0 ? round(($profit / $purchase) * 100, 2) : 0);
-                        }),
+                        })
+                        ->formatStateUsing(fn ($state) => number_format($state, 2, '.', '')),
 
                     TextInput::make('profit')
                         ->label(__('Profit (Auto)'))
                         ->disabled()
                         ->numeric()
                         ->prefix(__('EGP'))
-                        ->default(0),
+                        ->default(0)
+                        ->formatStateUsing(fn ($state) => number_format($state, 2, '.', '')),
 
                     TextInput::make('profit_percentage')
                         ->label(__('Profit %'))
                         ->disabled()
                         ->numeric()
                         ->suffix('%')
-                        ->default(0),
+                        ->default(0)
+                        ->formatStateUsing(fn ($state) => number_format($state, 2, '.', '')),
                 ])
                 ->columns(3),
         ]);
@@ -149,30 +153,29 @@ class ProductResource extends Resource
                 TextColumn::make('purchase_price')
                     ->label(__('Purchase Price'))
                     ->sortable()
-                    ->money('EGP')
+                    ->getStateUsing(fn ($record) => number_format($record->purchase_price, 2, '.', '') . ' ' . __('EGP'))
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('cash_price')
                     ->label(__('Cash Price'))
                     ->sortable()
-                    ->money('EGP'),
+                    ->getStateUsing(fn ($record) => number_format($record->cash_price, 2, '.', '') . ' ' . __('EGP')),
 
                 TextColumn::make('profit')
                     ->label(__('Profit'))
                     ->sortable()
-                    ->money('EGP')
+                    ->getStateUsing(fn ($record) => number_format($record->profit, 2, '.', '') . ' ' . __('EGP'))
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('profit_percentage')
                     ->label(__('Profit %'))
                     ->sortable()
                     ->suffix('%')
-                    ->getStateUsing(fn ($record) => $record->profit_percentage),
-
+                    ->getStateUsing(fn ($record) => number_format($record->profit_percentage, 2, '.', '')),
                 TextColumn::make('stock')
                     ->label(__('Stock'))
                     ->sortable()
-                    ->numeric()
+                    ->getStateUsing(fn ($record) => number_format($record->stock, 0, '.', ''))
                     ->color(fn ($record) => $record->stock > 0 ? 'success' : 'danger')
                     ->weight('bold'),
 
@@ -220,7 +223,8 @@ class ProductResource extends Resource
                             ->label(__('Quantity to Add'))
                             ->required()
                             ->numeric()
-                            ->minValue(1),
+                            ->minValue(1)
+                            ->formatStateUsing(fn ($state) => number_format($state, 0, '.', '')),
                     ])
                     ->action(fn (Product $record, array $data) => $record->increment('stock', $data['quantity']))
                     ->visible(fn ($record) => $record->exists),

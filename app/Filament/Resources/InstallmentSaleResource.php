@@ -79,6 +79,7 @@ class InstallmentSaleResource extends Resource
 
                         Repeater::make('items')
                             ->relationship()
+                            ->label(__('Items'))
                             ->minItems(1)
                             ->required()
                             ->schema([
@@ -300,6 +301,7 @@ class InstallmentSaleResource extends Resource
                     ->columns(2),
 
                 Section::make(__('Payment Summary'))
+                    
                     ->schema([
                         Grid::make(4)
                             ->schema([
@@ -351,7 +353,7 @@ class InstallmentSaleResource extends Resource
                                             $amt  = number_format($p['amount'], 2);
                                             $html .= "<div class='flex justify-between border-b pb-1'>";
                                             $html .= "<span>{$d}</span>";
-                                            $html .= "<span class='font-medium'>" . __('EGP') . " {$amt}</span>";
+                                            $html .= "<span class='font-medium'>" . static::getCurrencySymbol() . " {$amt}</span>";
                                             $html .= '</div>';
                                         }
                                         $html .= '</div>';
@@ -403,15 +405,16 @@ class InstallmentSaleResource extends Resource
 
                 TextColumn::make('down_payment')
                     ->label(__('Down Payment'))
-                    ->money('EGP'),
+                    ->getStateUsing(fn ($record) => number_format($record->down_payment, 2) . ' ' . static::getCurrencySymbol())
+                    ->sortable(),
 
                 TextColumn::make('paid_amount')
                     ->label(__('Paid'))
-                    ->money('EGP'),
+                    ->getStateUsing(fn ($record) => number_format($record->paid_amount, 2) . ' ' . static::getCurrencySymbol()),
 
                 TextColumn::make('remaining_amount')
                     ->label(__('Remaining'))
-                    ->money('EGP'),
+                    ->getStateUsing(fn ($record) => number_format($record->remaining_amount, 2) . ' ' . static::getCurrencySymbol()),
 
                 TextColumn::make('months_count')
                     ->label(__('Months Paid'))
@@ -422,7 +425,7 @@ class InstallmentSaleResource extends Resource
 
                 TextColumn::make('monthly_installment')
                     ->label(__('Monthly'))
-                    ->money('EGP'),
+                    ->getStateUsing(fn ($record) => number_format($record->monthly_installment, 2) . ' ' . static::getCurrencySymbol()),
 
                 TextColumn::make('status')
                     ->label(__('Status'))
@@ -431,6 +434,11 @@ class InstallmentSaleResource extends Resource
                         'completed' => 'success',
                         'ongoing'   => 'warning',
                         default     => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state) => match ($state) {
+                        'completed' => __('Completed'),
+                        'ongoing'   => __('Ongoing'),
+                        default     => __('Unknown'),
                     }),
             ])
             ->filters([
@@ -457,6 +465,7 @@ class InstallmentSaleResource extends Resource
 
                 Tables\Actions\Action::make('view_items')
                     ->icon('heroicon-o-eye')
+                    ->label(__('View Items'))
                     ->modalContent(fn (Sale $record) => view('filament.sale-items', [
                         'items' => $record->items()->with('product')->get(),
                         'currencySymbol' => app()->getLocale() === 'ar' ? 'جم' : 'EGP',

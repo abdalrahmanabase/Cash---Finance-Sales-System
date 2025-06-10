@@ -18,6 +18,7 @@ class ProviderPayment extends Model
 
     protected $casts = [
         'payment_date' => 'date',
+        'amount' => 'decimal:2',
     ];
 
     public function provider()

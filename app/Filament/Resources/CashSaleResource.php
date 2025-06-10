@@ -31,6 +31,18 @@ class CashSaleResource extends Resource
     {
         return __('Cash Sales');
     }
+    public static function getPluralModelLabel(): string
+    {
+        return __('Cash Sales');
+    }
+    public static function getModelLabel(): string
+    {
+        return __('Cash Sale');
+    }
+    public static function getTitle(): string
+    {
+        return __('Sales');
+    }
 
     public static function getNavigationGroup(): ?string
     {
@@ -255,6 +267,7 @@ class CashSaleResource extends Resource
                     }),
                 Tables\Actions\Action::make('view_items')
                     ->icon('heroicon-o-eye')
+                    ->label(__('View Items'))
                     ->modalContent(function (Sale $record) {
                         return view('filament.sale-items', [
                             'items' => $record->items()->with('product')->get(),

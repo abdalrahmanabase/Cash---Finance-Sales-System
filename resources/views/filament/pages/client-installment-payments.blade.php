@@ -88,7 +88,7 @@
         <form wire:submit.prevent="updatePayment">
             <div class="space-y-4">
                 <x-filament::input
-                    label="{{ __('Payment Amount') }}"
+                    label="{{ __('Payment Amount (:currency)', ['currency' => $currencySymbol]) }}"
                     type="number"
                     step="0.01"
                     wire:model.defer="form.amount"

@@ -29,6 +29,11 @@ class SalesProfitSummary extends Page implements HasTable
         return __('Sales Management');
     }
 
+    public static function getNavigationLabel(): string
+    {
+        return __('Cash Sales Profit Summary');
+    }
+
     public function getTitle(): string
     {
         return __('Cash Sales Profit Summary');

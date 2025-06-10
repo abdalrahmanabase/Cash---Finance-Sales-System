@@ -58,6 +58,7 @@ class ProviderResource extends Resource
                 ->schema([
                     Forms\Components\Repeater::make('bills')
                         ->relationship()
+                        ->label(__('Bills'))
                         ->schema([
                             Forms\Components\FileUpload::make('image_path')
                                 ->label(__('Bill Image'))
@@ -103,7 +104,7 @@ class ProviderResource extends Resource
 
                 Tables\Columns\TextColumn::make('total_debt')
                     ->label(__('Debt'))
-                    ->money(static::getCurrencySymbol()),
+                    ->formatStateUsing(fn ($state): string => number_format($state, 2) . ' ' . static::getCurrencySymbol()),
             ])
             ->actions([
                 Tables\Actions\Action::make('addPayment')

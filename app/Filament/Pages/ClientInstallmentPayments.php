@@ -28,6 +28,10 @@ class ClientInstallmentPayments extends Page
     {
         return __('Client Payments');
     }
+    public static function getNavigationLabel(): string
+{
+    return __('Client Payments'); // لو عندك ترجمة هتكتبها هنا
+}
 
     protected function getCurrencySymbol(): string
     {
@@ -73,9 +77,10 @@ class ClientInstallmentPayments extends Page
                             ->get()
                             ->mapWithKeys(fn ($sale) => [
                                 $sale->id => new HtmlString(
-                                    __('Sale #:id - :remaining جم remaining (:months months left)', [
+                                    __('Sale #:id - :remaining :currency remaining (:months months left)', [
                                         'id' => $sale->id,
                                         'remaining' => number_format($sale->remaining_amount, 2),
+                                        'currency' => $this->getCurrencySymbol(),
                                         'months' => $sale->remaining_months,
                                     ])
                                 )
@@ -113,8 +118,9 @@ class ClientInstallmentPayments extends Page
                                 return function (string $attribute, $value, $fail) use ($get) {
                                     $sale = Sale::find($get('saleId'));
                                     if ($sale && $value > $sale->remaining_amount) {
-                                        $fail(__("Payment amount cannot exceed remaining amount of :amount جم", [
+                                        $fail(__("Payment amount cannot exceed remaining amount of :amount :currency", [
                                             'amount' => number_format($sale->remaining_amount, 2),
+                                            'currency' => $this->getCurrencySymbol(),
                                         ]));
                                     }
                                 };
@@ -162,7 +168,7 @@ class ClientInstallmentPayments extends Page
                             foreach ($payments as $payment) {
                                 $history .= '<div class="flex justify-between border-b pb-1">';
                                 $history .= '<span>' . Carbon::parse($payment['date'])->format('d-m-Y') . '</span>';
-                                $history .= '<span class="font-medium">' . __('جم') . ' ' . number_format($payment['amount'], 2) . '</span>';
+                                $history .= '<span class="font-medium">' . $this->getCurrencySymbol() . ' ' . number_format($payment['amount'], 2) . '</span>';
                                 $history .= '</div>';
                             }
 

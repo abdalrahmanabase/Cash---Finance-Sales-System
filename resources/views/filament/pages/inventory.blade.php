@@ -51,17 +51,17 @@
     </div>
 
     <div class="overflow-x-auto">
-        <table class="filament-tables-table w-full text-sm" id="productsTable">
-            <thead>
-                <tr class="bg-gray-50 dark:bg-gray-700">
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">{{ __('Product') }}</th>
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">{{ __('Category') }}</th>
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">{{ __('Stock') }}</th>
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">{{ __('Purchase Price') }}</th>
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">{{ __('Total Value') }}</th>
+        <table class="table" id="productsTable">
+            <thead class="table-header">
+                <tr>
+                    <th class="table-header-cell">{{ __('Product') }}</th>
+                    <th class="table-header-cell">{{ __('Category') }}</th>
+                    <th class="table-header-cell">{{ __('Stock') }}</th>
+                    <th class="table-header-cell">{{ __('Purchase Price') }}</th>
+                    <th class="table-header-cell">{{ __('Total Value') }}</th>
                 </tr>
             </thead>
-            <tbody id="productsTableBody"></tbody>
+            <tbody class="table-body" id="productsTableBody"></tbody>
         </table>
     </div>
 
@@ -138,12 +138,12 @@
             products.forEach(product => {
                 let category = product.category && product.category.name ? product.category.name : 'Uncategorized';
                 tbody.innerHTML += `
-                    <tr class="border-b dark:border-gray-700">
-                        <td class="px-4 py-2 dark:text-gray-100">${product.name}</td>
-                        <td class="px-4 py-2 dark:text-gray-100">${category}</td>
-                        <td class="px-4 py-2 dark:text-gray-100">${Number(product.stock).toLocaleString('en-US')}</td>
-                        <td class="px-4 py-2 dark:text-gray-100">${currencySymbol} ${Number(product.purchase_price).toLocaleString('en-US')}</td>
-                        <td class="px-4 py-2 dark:text-gray-100">${currencySymbol} ${(product.stock * product.purchase_price).toLocaleString('en-US')}</td>
+                    <tr class="table-row">
+                        <td class="table-cell">${product.name}</td>
+                        <td class="table-cell">${category}</td>
+                        <td class="table-cell">${Number(product.stock).toLocaleString('en-US')}</td>
+                        <td class="table-cell">${currencySymbol} ${Number(product.purchase_price).toLocaleString('en-US')}</td>
+                        <td class="table-cell">${currencySymbol} ${(product.stock * product.purchase_price).toLocaleString('en-US')}</td>
                     </tr>
                 `;
             });

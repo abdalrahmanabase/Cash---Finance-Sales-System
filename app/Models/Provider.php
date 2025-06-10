@@ -31,7 +31,7 @@ class Provider extends Model
         return $this->hasMany(ProviderPayment::class);
     }
 
-    public function getTotalDebtAttribute()
+      public function getTotalDebtAttribute()
     {
         $billDebt = $this->bills->sum(fn($bill) => ($bill->total_amount - $bill->amount_paid));
         $extraPayments = $this->payments->sum('amount');

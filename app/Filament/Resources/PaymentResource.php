@@ -15,20 +15,12 @@ use Carbon\Carbon;
 class PaymentResource extends Resource
 {
     protected static ?string $model = Sale::class;
-    protected static ?string $modelLabel = 'Payment';
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
-    protected static ?string $navigationGroup = 'Clients Management';
-    protected static ?string $navigationLabel = 'Payments Table';
 
-    public static function getModelLabel(): string
-    {
-        return __('Payment');
-    }
-
-    public static function getPluralModelLabel(): string
-    {
-        return __('Payments');
-    }
+    protected static ?string $navigationLabel = null;
+    protected static ?string $navigationGroup = null;
+    protected static ?string $title = null;
+    
 
     public static function getNavigationLabel(): string
     {
@@ -39,6 +31,26 @@ class PaymentResource extends Resource
     {
         return __('Clients Management');
     }
+
+    public static function getTitle(): string
+    {
+        return __('Payments Table');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Payment');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Payments');
+    }
+protected static function currencySymbol(): string
+    {
+        return app()->getLocale() === 'ar' ? 'جم.' : 'EGP';
+    }
+
 
     public static function table(Table $table): Table
     {
@@ -63,19 +75,21 @@ class PaymentResource extends Resource
                     ->date('d-m-Y')
                     ->sortable(),
 
-                TextColumn::make('monthly_installment')
+                 TextColumn::make('monthly_installment')
                     ->label(__('Monthly Payment'))
-                    ->money('EGP')
+                    ->getStateUsing(fn (Sale $sale) => 
+                        number_format($sale->monthly_installment, 0, '.', ',') . ' ' . static::currencySymbol()
+                    )
                     ->sortable(),
 
                 TextColumn::make('amount_due')
                     ->label(__('Amount Due'))
-                    ->money('EGP')
-                    ->getStateUsing(function (Sale $record) {
-                        $progress = $record->getPaymentScheduleProgress();
-                        return $progress['next_payment_due'] > 0
+                    ->getStateUsing(function (Sale $sale) {
+                        $progress = $sale->getPaymentScheduleProgress();
+                        $amt = $progress['next_payment_due'] > 0
                             ? $progress['next_payment_due']
-                            : $record->monthly_installment;
+                            : $sale->monthly_installment;
+                        return number_format($amt, 0, '.', ',') . ' ' . static::currencySymbol();
                     }),
 
                 TextColumn::make('status')

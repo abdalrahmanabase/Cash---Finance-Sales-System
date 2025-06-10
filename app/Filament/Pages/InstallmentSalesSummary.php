@@ -26,6 +26,11 @@ class InstallmentSalesSummary extends Page implements HasTable
         return __('Sales Management');
     }
 
+    public static function getNavigationLabel(): string
+    {
+        return __('Installment Payments Summary');
+    }
+
     public function getTitle(): string
     {
         return __('Installment Payments Summary');

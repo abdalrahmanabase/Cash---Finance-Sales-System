@@ -15,6 +15,11 @@ class Inventory extends Page
         return __('Inventory');
     }
 
+    public  function getTitle(): string
+    {
+        return __('Inventory');
+    }
+
     protected function getCurrencySymbol(): string
 {
     return app()->getLocale() === 'ar' ? 'جم' : 'EGP';

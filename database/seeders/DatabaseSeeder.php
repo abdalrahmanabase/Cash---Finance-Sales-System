@@ -19,9 +19,7 @@ class DatabaseSeeder extends Seeder
         ProductSeeder::class,
         ClientSeeder::class,
         ClientGuarantorSeeder::class,
-        // FakeCashSalesSeeder::class,
-        FakeSalesSeeder::class,
-        // FakeInstallmentSalesSeeder::class,
+        FullFakeDataSeeder::class,
     ]);
 
 

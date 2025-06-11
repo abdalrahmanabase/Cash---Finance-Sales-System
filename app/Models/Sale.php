@@ -349,9 +349,8 @@ class Sale extends Model
     }
 
     if ($this->isPaymentOverdue()) {
-        // next_payment_date is already a Carbon instance
         $daysLate = now()->diffInDays($this->next_payment_date, false);
-        return $daysLate <= -3 ? 'danger' : 'orange';
+        return $daysLate <= -7 ? 'danger' : 'orange';
     }
 
     if ($this->remaining_amount > 0

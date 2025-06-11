@@ -74,6 +74,7 @@ class CashSaleResource extends Resource
     {
         return Repeater::make('items')
             ->relationship()
+            ->label(__('Items'))
             ->minItems(1)
             ->required()
             ->schema([

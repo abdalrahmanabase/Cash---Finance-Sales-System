@@ -234,7 +234,7 @@
   "Completed": "مكتمل",
    "Payment": "دفعة",
   "Payments": "الدفعات",
-
+  "Paid This Month": "مدفوع هذا الشهر",
   "Next Payment Date": "تاريخ الدفع التالي",
   "Monthly Payment": "الدفعة الشهرية",
   "Amount Due": "المبلغ المستحق",
@@ -249,7 +249,12 @@
   "Total Amount": "المبلغ الإجمالي",
   "Remaining": "المتبقي",
   "Monthly": "شهري",
-  
+  "previous": "السابق",
+  "next": "التالي",
+  "Showing": "عرض",
+  "to": "إلى",
+  "of": "من",
+  "results": "نتائج",
   "Create Client": "إنشاء عميل",
   "Fixed (EGP)": "ثابت (جم)",
   "Products": "المنتجات",
